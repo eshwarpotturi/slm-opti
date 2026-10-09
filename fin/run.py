@@ -226,6 +226,7 @@ def main(argv=None):
     tasks = json.load(open(os.path.join(HERE, a.tasks)))
     if a.limit:
         tasks = tasks[:a.limit]
+    os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
     out = os.path.join(HERE, "results", "%s__L%s-%s.jsonl" % (re.sub(r"[^A-Za-z0-9.-]+", "-", a.model.split(":", 1)[1]), a.layers, a.tag))
     done = {json.loads(l)["id"] for l in open(out)} if os.path.exists(out) else set()
     todo = [t for t in tasks if t["id"] not in done]
