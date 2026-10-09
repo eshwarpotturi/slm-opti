@@ -95,8 +95,28 @@ The small model with all five layers reaches 89% against the large model's 93%, 
 | `run_eval.py`, `report.py`, `ladder_report.py` | Baseline runner and score tables |
 | `build_page.py`, `page_template.html`, `index.html` | The results page, built from `results/` |
 | `finetune.ipynb`, `make_train.py`, `train_tasks.json` | Fine-tuning notebook and its training data |
+| `classic.py` | The classical baseline: classifier plus rules, no language model |
 | `embeddings_public.json` | Stored embeddings for set C, so layer 3 runs without a gateway |
 | `results/` | Every model reply and its mark |
+
+## A classical baseline, with no language model
+
+`classic.py` does the same job with a TF-IDF and logistic-regression classifier to pick the action, and about 130 lines of hand-written rules to fill in the details. It is trained on the 1,050 requests in `train_tasks.json`.
+
+| Setup, on set C | Right | Wrong write actions | Cost |
+|---|---|---|---|
+| Classical, no rule check | 78% | 21 | none: 5.6 seconds on a CPU for everything |
+| Classical, with the layer 4 rule check | 89% | 4 | none |
+| Gemma 3 4B, all five layers (for comparison) | 89% | 3 | $1.12 per 1,000 requests |
+
+On this test the classical baseline matches the small model with all five layers. Read that with these in mind:
+
+- **It had 1,050 labelled examples; the language-model runs above had none.** The like-for-like comparison is the fine-tuned model below, which uses the same training data.
+- **The training requests come from the same generator as the test.** Accounts and wording differ, and the test was reworded by a different model, but the 23 actions and the kinds of request are identical. A closed set of actions with matching training data is the best case for a classifier.
+- **The detail rules were written by hand for these 23 actions,** and developed against held-back training requests (92% there, with the rule check). Every new action needs new rules and new labelled examples; the language-model stack needs one new line in the tool list.
+- **Set C was run once,** after the rules were finished.
+
+The log of the run is in `results/classic_log.txt`.
 
 ## Fine-tuning (in progress)
 
