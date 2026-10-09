@@ -111,18 +111,33 @@ The small model with all five layers reaches 89% against the large model's 93%, 
 
 On this test the classical baseline matches the small model with all five layers. Read that with these in mind:
 
-- **It had 1,050 labelled examples; the language-model runs above had none.** The like-for-like comparison is the fine-tuned model below, which uses the same training data.
+- **It had 1,050 labelled examples; the untuned language-model runs above had none.** The like-for-like comparison is the fine-tuned model below, which uses the same training data and scores the same.
 - **The training requests come from the same generator as the test.** Accounts and wording differ, and the test was reworded by a different model, but the 23 actions and the kinds of request are identical. A closed set of actions with matching training data is the best case for a classifier.
 - **The detail rules were written by hand for these 23 actions,** and developed against held-back training requests (92% there, with the rule check). Every new action needs new rules and new labelled examples; the language-model stack needs one new line in the tool list.
 - **Set C was run once,** after the rules were finished.
 
 The log of the run is in `results/classic_log.txt`.
 
-## Fine-tuning (in progress)
+## Fine-tuning
 
-`finetune.ipynb` trains Gemma 3 4B with LoRA on 800 generated requests and tests it on set C, alone and with the layers. It runs on a free Colab T4 GPU and needs no account or key: [open it in Colab](https://colab.research.google.com/github/eshwarpotturi/slm-opti/blob/main/finetune.ipynb).
+`finetune.ipynb` trains Gemma 3 4B with LoRA on 800 of the requests in `train_tasks.json` and tests it on set C. It ran on a free Colab T4 GPU: 143 minutes of training, one pass over the data. It needs no account or key: [open it in Colab](https://colab.research.google.com/github/eshwarpotturi/slm-opti/blob/main/finetune.ipynb).
 
-`make_train.py` builds the training data (`train_tasks.json`): 1,050 requests on accounts from seeds used in no test set, so no customer, ID or amount is shared. Over half are reworded in four styles by Gemini 2.5 Flash-Lite; the tests were reworded by a different model in one casual style. No results yet.
+The classical baseline learned from the same training file, so these rows are like for like.
+
+| Setup, on set C | Right | Wrong write actions |
+|---|---|---|
+| Gemma 3 4B untuned, alone | 51% | 48 |
+| Classical model, alone | 78% | 21 |
+| Gemma 3 4B tuned, alone | 80% | 20 |
+| Classical model, with the rule check | 89% | 4 |
+| Gemma 3 4B tuned, with the rule check | 89% | 5 |
+| Gemma 3 4B tuned, with layers 1 to 4 | 90% | 7 |
+
+Training lifted the model from 51% to 80%. It did not lift it above the classical model: 80% against 78% alone, and 89% each with the rule check. Differences of two or three requests are within what repeated runs of one setup show. On this task, which is choosing an action and extracting its details, a classifier trained in seconds matches a language model trained for over two hours.
+
+The untuned row here was run on Colab with a 4-bit copy of the model and scored 51%; the same model through the gateway scored 55%.
+
+`make_train.py` builds the training data: 1,050 requests on accounts from seeds used in no test set, so no customer, ID or amount is shared. Over half are reworded in four styles by Gemini 2.5 Flash-Lite; the tests were reworded by a different model in one casual style. The trained adapter (119 MB) is not in the repository.
 
 ## Running it
 
