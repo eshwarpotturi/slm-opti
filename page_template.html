@@ -11,7 +11,7 @@
 <style>
 :root{
   --paper:#f3f5f8; --surface:#ffffff; --ink:#0f2238; --ink-2:#44546a; --ink-3:#6c7a8d; --rule:#d5dbe4;
-  --bar:#1d3f66; --bar-soft:#c9d5e4; --good:#0b6b4f; --bad:#b3322a; --good-bg:#e4f3ed; --bad-bg:#fbe9e6;
+  --bar:#1d3f66; --ref:#8c98aa; --bar-soft:#c9d5e4; --good:#0b6b4f; --bad:#b3322a; --good-bg:#e4f3ed; --bad-bg:#fbe9e6;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
   --display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -58,6 +58,8 @@ code,.call{font-family:var(--mono);font-size:.84rem}
 .fill{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
 .bar-row .val{font:700 1.15rem var(--display);text-align:right}
 .bar-row:hover .fill{filter:brightness(1.25)}
+.bar-row.ref .fill{background:var(--ref)}
+.bar-gap{border-top:1px dashed var(--rule);margin-top:16px}
 
 table{border-collapse:collapse;width:100%;background:var(--surface);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:18px;font-size:.95rem}
 th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--rule)}
@@ -157,6 +159,7 @@ footer{padding:32px 0 56px;border-top:1px solid var(--rule);color:var(--ink-3);f
 <section class="wrap" id="result">
   <h2>What changed</h2>
   <p class="narrow">150 requests on invented accounts, worded casually by a different AI model. The code was finished before these requests existed. The model is Gemma 3 4B and is the same in every run: no fine-tuning, no rewritten prompt.</p>
+  <div class="legend"><span><i style="background:var(--bar);height:10px"></i>Small model, Gemma 3 4B</span><span><i style="background:var(--ref);height:10px"></i>Large model, Claude Sonnet 4.5, for reference</span></div>
   <div class="charts">
     <div class="chart"><h3>Requests handled correctly</h3><div class="note">Share of 150</div><div id="bars-right"></div></div>
     <div class="chart"><h3>Wrong money or account actions</h3><div class="note">Requests out of 150 where it would have refunded, cancelled, sent or created something it should not</div><div id="bars-wrong"></div></div>
@@ -206,18 +209,21 @@ footer{padding:32px 0 56px;border-top:1px solid var(--rule);color:var(--ink-3);f
 
 <section class="wrap" id="cost">
   <h2>What it costs</h2>
-  <p class="narrow">Estimated from list prices, for the 150 requests.</p>
-  <div class="three">
-    <div><b id="c-four"></b>Small model with layers 1 to 4</div>
-    <div><b id="c-five"></b>All five layers. Nearly all of it is the large model's share.</div>
-    <div><b id="c-share"></b>of requests never left the small model</div>
-  </div>
+  <p class="narrow">Per 1,000 requests, estimated from list prices and the tokens these runs used. The large model here is Claude Sonnet 4.5.</p>
+  <table id="cost-table" aria-label="Cost and accuracy by setup">
+    <thead><tr><th>Setup</th><th>Right</th><th>Wrong actions in 150</th><th>Cost per 1,000 requests</th></tr></thead><tbody></tbody>
+  </table>
+  <ul class="plain narrow">
+    <li id="cost-a"></li>
+    <li id="cost-b"></li>
+    <li>The layers also cut the large model's own bill, because it reads only the records and tools each request needs.</li>
+  </ul>
 </section>
 
 <section class="wrap" id="limits">
   <h2>What this does not show</h2>
   <ul class="plain narrow">
-    <li>A large model alone on the same requests has not been measured, so there is no reference line yet.</li>
+    <li>One large model was measured, once. Other large models, or another run, may score differently.</li>
     <li>The rules in layer 4 and the tests were written by the same author. The requests here use new accounts and another model's wording, but the kinds of request are the same.</li>
     <li>Layer 1 repairs and validates a reply after the fact. It is not grammar-constrained decoding.</li>
     <li>Every account, customer and transaction is invented. Nothing is executed; the test checks which actions the model proposes.</li>
@@ -258,20 +264,28 @@ $("#hero-q").textContent = "“" + D.hero.q + "”";
 calls(D.hero.a, $("#hero-a")); calls(D.hero.c, $("#hero-c"));
 $("#hero-c").append(el("div", "note", "Rule check: " + D.hero.rej[0] + "."));
 
+const allSteps = steps.concat(["Large model alone", "Large model, layers 1 to 4"]);
 function bars(box, vals, max, fmt, tipf) {
   vals.forEach((v, i) => {
-    const row = el("div", "bar-row"); row.append(el("div", "lab", steps[i]));
+    if (i === 3) box.append(el("div", "bar-gap"));
+    const row = el("div", "bar-row" + (i > 2 ? " ref" : "")); row.append(el("div", "lab", allSteps[i]));
     const tr = el("div", "track"), f = el("div", "fill"); f.style.width = (100 * v / max) + "%"; tr.append(f);
     row.append(tr, el("div", "val", fmt(v))); hover(row, tipf(i)); box.append(row);
   });
 }
-bars($("#bars-right"), D.head.map(r => 100 * r.right / r.n), 100, v => Math.round(v) + "%", i => steps[i] + ": " + D.head[i].right + " of " + D.head[i].n + " right");
-bars($("#bars-wrong"), D.head.map(r => r.wrong), Math.max(...D.head.map(r => r.wrong)), v => v, i => steps[i] + ": " + D.head[i].wrong + " of " + D.head[i].n + " requests");
+const ALL = D.head.concat(D.ref);
+bars($("#bars-right"), ALL.map(r => 100 * r.right / r.n), 100, v => Math.round(v) + "%", i => allSteps[i] + ": " + ALL[i].right + " of " + ALL[i].n + " right");
+bars($("#bars-wrong"), ALL.map(r => r.wrong), Math.max(...ALL.map(r => r.wrong)), v => v, i => allSteps[i] + ": " + ALL[i].wrong + " of " + ALL[i].n + " requests");
 D.cats.forEach((name, i) => { const tr = el("tr"); tr.append(el("td", "", name)); D.head.forEach(r => tr.append(el("td", "num", r.cats[i] + "%"))); $("#cat-table tbody").append(tr); });
 { const tr = el("tr"); tr.append(el("td", "", "All requests")); D.head.forEach(r => { const td = el("td", "num"); td.append(el("strong", "", pct(r))); tr.append(td); }); $("#cat-table tbody").append(tr); }
 $("#esc-n").textContent = C.esc;
-$("#c-four").textContent = "$" + B.cost.toFixed(3); $("#c-five").textContent = "$" + C.cost.toFixed(2);
-$("#c-share").textContent = Math.round(100 * (C.n - C.esc) / C.n) + "%";
+{
+  const per = r => r.cost / r.n * 1000, money = v => "$" + (v < 1 ? v.toFixed(2) : v.toFixed(2));
+  [["Small model alone", A], ["Small model, layers 1 to 4", B], ["Small model, all five layers", C], ["Large model alone", D.ref[0]], ["Large model, layers 1 to 4", D.ref[1]]].forEach(([n, r]) => {
+    const tr = el("tr"); tr.append(el("td", "", n), el("td", "num", pct(r)), el("td", "num", r.wrong), el("td", "num", money(per(r)))); $("#cost-table tbody").append(tr); });
+  $("#cost-a").textContent = "All five layers on the small model reach " + pct(C) + " against the large model's " + pct(D.ref[0]) + ", at about " + Math.round(100 * per(C) / per(D.ref[0])) + "% of its cost. " + Math.round(100 * (C.n - C.esc) / C.n) + "% of requests never left the small model.";
+  $("#cost-b").textContent = "The large model alone still took " + D.ref[0].wrong + " wrong money or account actions. With layers 1 to 4 around it: " + D.ref[1].wrong + ", and " + pct(D.ref[1]) + " right.";
+}
 const ll = D.lad.find(d => d.name.startsWith("Llama")); $("#ll-0").textContent = ll.wrong[0]; $("#ll-1").textContent = ll.wrong[1];
 D.lad.forEach(d => { const tr = el("tr"); tr.append(el("td", "", d.name), el("td", "num", d.right[0] + "%"), el("td", "num", d.right[4] + "%"), el("td", "num", d.wrong[0]), el("td", "num", d.wrong[4])); $("#lad-table tbody").append(tr); });
 

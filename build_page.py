@@ -56,8 +56,11 @@ def summary(tasks, runs):
 
 G = "bedrock-google.gemma-3-4b-it"
 tasks = json.load(open(os.path.join(HERE, "tasks_third.json")))
-alone, four, five = load(G + "__L0-t"), load(G + "__L1234-u"), load(G + "__L12345-t")
+alone, four, five = load(G + "__L0-t"), load(G + "__L1234-u"), load(G + "__L12345-u")
+BIG = "bedrock-us.anthropic.claude-sonnet-4-5-20250929-v1-0"
+big0, big4 = load(BIG + "__L0-u"), load(BIG + "__L1234-u")
 head = summary(tasks, [alone, four, five])
+ref = summary(tasks, [big0, big4])
 
 # every layer on the unseen test, three small models
 lad = []
@@ -122,7 +125,7 @@ pick("One the layers still get wrong", lambda r: not r["cp"] and not r["esc"] an
 cands = [r for r in rows if r["cat"] == 4 and r["aw"] and r["cp"] and not r["c"] and r["rej"] and r["a"] and "refund" in r["a"][0]]
 hero = next((r for r in cands if "REFUNDED" in r["rej"][0]), cands[0])
 
-data = {"head": head, "cats": [n for _, n in CATS], "lad": lad, "rows": rows, "hero": hero, "walks": walks}
+data = {"ref": ref, "head": head, "cats": [n for _, n in CATS], "lad": lad, "rows": rows, "hero": hero, "walks": walks}
 html = open(os.path.join(HERE, "page_template.html")).read().replace("/*DATA*/", json.dumps(data, separators=(",", ":")).replace("</", "<\\/"))
 open(os.path.join(HERE, "index.html"), "w").write(html)
 print("index.html written:", len(html) // 1024, "KB |", head)

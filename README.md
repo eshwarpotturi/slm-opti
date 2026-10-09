@@ -59,11 +59,21 @@ Estimated from list prices, per 150 requests on set C:
 | Small model with layers 1 to 4 | $0.006 |
 | All five layers | $0.16, of which $0.15 is the large model's 42 requests |
 
-A large model alone on the same requests has not been measured, so there is no reference line yet.
+### Against a large model, on set C
+
+| Setup | Right | Wrong write actions | Cost per 1,000 requests |
+|---|---|---|---|
+| Gemma 3 4B alone | 55% | 48 | $0.14 |
+| Gemma 3 4B, layers 1 to 4 | 79% | 3 | $0.04 |
+| Gemma 3 4B, all five layers | 89% | 3 | $1.12 |
+| Claude Sonnet 4.5 alone | 93% | 7 | $11.41 |
+| Claude Sonnet 4.5, layers 1 to 4 | 97% | 0 | $3.58 |
+
+The small model with all five layers reaches 89% against the large model's 93%, at about 10% of its cost. The large model alone still took 7 wrong write actions; the same layers around it removed them and cut its bill, because it reads only the records and tools each request needs.
 
 ## Limits
 
-- **No large-model reference.** "Close to a large model" is not shown.
+- **One large model, one run.** Other large models, or a repeat run, may score differently.
 - **The author of the tests also wrote the rules.** Sets B and C use new accounts and wording by a different model, but the kinds of request are the same as in set A.
 - **Layer 1 is not true constrained decoding.** It repairs and validates after the fact. Provider-side enforcement was rate-limited during this work.
 - **Layers 1 to 3 without layer 4 can reduce safety.** Once Llama 3.1 8B's replies became readable, it acted more often, wrongly too: 13 wrong write actions rose to 35 on set A. Layer 4 brought that to 1.
