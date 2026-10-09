@@ -72,7 +72,7 @@ table{border-collapse:collapse;width:100%%;font-family:system-ui,sans-serif;font
 .flow div{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:12px}.flow b{display:block;font-size:1.5rem}
 button{font:inherit;font-family:system-ui,sans-serif;font-size:.85rem;padding:5px 10px;margin:0 6px 8px 0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:3px;cursor:pointer}
 </style></head><body><main>
-<h1>Two small models that check each other get within two points of a model costing far more</h1>
+<h1>Two small models that check each other reach %(px)d%%, against %(ph)d%% for a larger model at nearly twice the cost</h1>
 <p class="lead">The task is the kind an analyst does all day: read a page of a company's annual report and work out a figure from it, such as a margin, a growth rate or a share of a total. The test is %(N)d questions from FinQA, a public benchmark written by finance experts, restricted to banks, insurers and payment companies.</p>
 
 <h2>Share of questions answered correctly</h2>
@@ -112,7 +112,7 @@ for k, lab in [(1, "One"), (2, "Two"), (3, "Three or more")]:
     ids = [i for i, t in T.items() if min(t["steps"], 3) == k]
     steps += "<tr><td>%s</td><td class='n'>%d</td><td class='n'>%d%%</td><td class='n'>%d%%</td><td class='n'>%d%%</td><td class='n'>%d%%</td></tr>" % (
         lab, len(ids), pct(g, ids), pct(m, ids), pct(x, ids), pct(h, ids))
-out = page % dict(N=N, bars=bar_html, na=len(agreed), pa=pct(x, agreed), ne=len(esc), pe=pct(x, esc), px=pct(x), ha=pct(h, agreed),
+out = page % dict(N=N, bars=bar_html, na=len(agreed), pa=pct(x, agreed), ne=len(esc), pe=pct(x, esc), px=pct(x), ph=pct(h), ha=pct(h, agreed),
                   ratio=round(100 * per1000(x) / per1000(h)), tried=tried_rows, steps=steps, rows="".join(rows))
 open(os.path.join(HERE, "index.html"), "w").write(out)
 print("written", len(out) // 1024, "KB", bars)
