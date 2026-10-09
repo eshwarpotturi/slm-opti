@@ -10,3 +10,6 @@ logs/
 
 # embedding caches (rebuilt automatically)
 emb_cache*.json
+
+# client-specific question sets stay off the public repo
+fin/private/
