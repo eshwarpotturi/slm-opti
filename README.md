@@ -160,3 +160,7 @@ Runs are resumable: rerun the same command to continue. Only the Python standard
 **Does it exist already?** Each technique is known: schema validation, entity grounding, tool retrieval, guardrails, model cascades. This repository measures them stacked on one small model, layer by layer, on a payments toolkit.
 
 **Why not fine-tune?** Fine-tuning is the obvious next step and has not been tried here.
+
+## Second study: financial-report questions
+
+A second study, on questions that need a figure worked out from a company's annual report, is in [`fin/`](fin/README.md). The front page, `index.html`, joins both studies and is built by `build_site.py`. `tools.html` is the detailed page for the payment requests and `fin/index.html` the one for the financial questions.

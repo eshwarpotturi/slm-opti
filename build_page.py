@@ -127,8 +127,8 @@ hero = next((r for r in cands if "REFUNDED" in r["rej"][0]), cands[0])
 
 data = {"ref": ref, "head": head, "cats": [n for _, n in CATS], "lad": lad, "rows": rows, "hero": hero, "walks": walks}
 html = open(os.path.join(HERE, "page_template.html")).read().replace("/*DATA*/", json.dumps(data, separators=(",", ":")).replace("</", "<\\/"))
-open(os.path.join(HERE, "index.html"), "w").write(html)
-print("index.html written:", len(html) // 1024, "KB |", head)
+open(os.path.join(HERE, "tools.html"), "w").write(html)
+print("tools.html written:", len(html) // 1024, "KB |", head)
 print("walkthroughs:", [(w["label"], w["id"], len(w["steps"])) for w in walks])
 print("ladder:", lad)
 print("hero:", hero["q"], "|", hero["a"], "|", hero["rej"])

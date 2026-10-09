@@ -138,17 +138,17 @@ button{font:inherit;font-size:.85rem;padding:5px 10px;margin:8px 6px 8px 0;borde
 <p class="note">Correct means within 1%% of the benchmark's answer. Costs are list prices. * Does not include the cost of running the fine-tuned model.</p>
 
 <h2>Details</h2>
-<details><summary>What we did to the small model</summary>
+<details open><summary>What we did to the small model</summary>
 <p>Fine-tuning: Gemma 3 4B was trained for 36 minutes on a free GPU, on 1,026 solved questions from the benchmark's training split, to write the formula for the answer. Code then does the arithmetic and checks that every figure in the formula is printed in the report. Alone, the model rose from %(pg)d%% to %(pt)d%%. Paired with a second small model, the answers the two agree on are %(pa)d%% correct, up from %(pa0)d%% for the pair without fine-tuning.</p></details>
-<details><summary>What we tried that did not help</summary>
+<details open><summary>What we tried that did not help</summary>
 <p>Each of these was tried on Gemma 3 4B with 100 questions from the benchmark's separate development split. None beat the model alone, so none was used. The mistakes are mostly choosing the wrong row or year, not arithmetic. With 100 questions, a few points either way is within chance.</p>
 <div class="wrap"><table><tr><th>Setup</th><th class="n">Correct</th></tr>%(tried)s</table></div></details>
-<details><summary>Results by difficulty</summary>
+<details open><summary>Results by difficulty</summary>
 <div class="wrap" style="margin-top:10px"><table><tr><th>Arithmetic steps needed</th><th class="n">Questions</th><th class="n">Small model alone</th><th class="n">Fine-tuned</th><th class="n">Our setup</th><th class="n">Larger model</th></tr>%(steps)s</table></div></details>
-<details><summary>Every question and every answer</summary>
+<details id="every"><summary>Every question and every answer</summary>
 <button onclick="f('')">All %(N)d</button><button onclick="f('agreed')">Small models agreed</button><button onclick="f('escalated')">Sent to the larger model</button>
 <div class="wrap tall"><table id="q"><tr><th>Question</th><th class="n">Correct answer</th><th class="n">Fine-tuned Gemma</th><th class="n">Ministral</th><th>Route</th><th class="n">Final</th></tr>%(rows)s</table></div></details>
-<details><summary>Limits</summary>
+<details open><summary>Limits</summary>
 <p>About half the questions still go to the larger model. The benchmark supplies the right page of the report; finding that page in a full report is not tested. The benchmark's own answers contain some errors, which caps every score. All runs are single runs. The fine-tuned pair's result combines recorded answers from separate runs of each model.</p></details>
 <p class="note">Data: FinQA (Chen et al., 2021), MIT licence. Code and every recorded answer are in the repository.</p>
 </main><script>function f(c){document.querySelectorAll('#q tr').forEach(function(r,i){if(i)r.style.display=(!c||r.className==c)?'':'none'})}</script></body></html>"""

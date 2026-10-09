@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Making small models dependable</title>
+<style>
+:root{--bg:#f6f4ee;--paper:#fffdf8;--ink:#191816;--mute:#6f6a60;--line:#ddd8cc;--grey:#b3ac9d;--green:#0f6b55;--slate:#3d4f7a;--red:#a4452f;--tint:#e6f0ec}
+@media (prefers-color-scheme:dark){:root{--bg:#121211;--paper:#1a1a18;--ink:#ebe7df;--mute:#a09a8d;--line:#33312c;--grey:#6a655a;--green:#57bfa2;--slate:#93a6d6;--red:#e28a73;--tint:#17261f}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.d,h1,h2,h3,.num{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+svg{width:100%;height:auto;display:block}svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}svg text.d{font-family:"Iowan Old Style",Palatino,Georgia,serif}
+.w{max-width:1040px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line)}header .w{display:flex;justify-content:space-between;align-items:center;padding-top:14px;padding-bottom:14px;font-size:.85rem;color:var(--mute)}
+header nav a{color:var(--mute);text-decoration:none;margin-left:18px}header nav a:hover{color:var(--ink)}
+.hero{padding:64px 0 40px;display:grid;grid-template-columns:1fr 1.25fr;gap:40px;align-items:center}
+.eyebrow{font-size:.8rem;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:600;margin:0 0 14px}
+h1{font-size:2.75rem;line-height:1.08;margin:0 0 18px;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+.lead{font-size:1.15rem;margin:0;color:var(--ink);max-width:36ch}
+.key{font-size:.82rem;color:var(--mute);display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}.key i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.key i.bar{width:3px;height:13px;border-radius:0;vertical-align:-2px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.sec{display:grid;grid-template-columns:200px 1fr;gap:40px}.sec>.tag{font-size:.8rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);padding-top:10px}
+h2{font-size:1.9rem;line-height:1.15;margin:0 0 12px;font-weight:600;text-wrap:balance}h3{font-size:1.2rem;margin:0 0 6px;font-weight:600}
+p{margin:0 0 14px;max-width:68ch}.mute{color:var(--mute)}.small{font-size:.86rem;color:var(--mute)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);background:var(--paper);margin-top:26px}
+.three>div{padding:26px 24px;border-right:1px solid var(--line)}.three>div:last-child{border:0}
+.three .n{font-size:.8rem;color:var(--green);font-weight:700;letter-spacing:.08em}.num{font-size:2.2rem;line-height:1;font-weight:600;margin:14px 0 4px;white-space:nowrap}
+.num small{font-size:1.2rem;color:var(--mute);font-weight:400}.three p{font-size:.95rem;margin:8px 0 0}
+.fig{background:var(--paper);border:1px solid var(--line);padding:22px 22px 14px;margin:22px 0}.fig h4{margin:0 0 4px;font-size:1rem}.fig .cap{font-size:.85rem;color:var(--mute);margin:0 0 14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}.two .fig{margin:0}
+.stat{display:flex;gap:28px;flex-wrap:wrap;margin:18px 0 6px}.stat div{min-width:140px}.stat b{display:block;font:600 2rem/1 "Iowan Old Style",Palatino,Georgia,serif}.stat span{font-size:.86rem;color:var(--mute)}
+.g{color:var(--green)}.s{color:var(--slate)}
+.call{border-left:3px solid var(--green);background:var(--tint);padding:16px 20px;margin:22px 0;max-width:70ch}.call p{margin:0}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.links a{display:block;border:1px solid var(--line);background:var(--paper);padding:18px;color:var(--ink);text-decoration:none}
+.links a:hover{border-color:var(--green)}.links b{display:block;margin-bottom:4px}.links span{font-size:.86rem;color:var(--mute)}
+ul.plain{margin:0 0 14px;padding-left:18px;max-width:68ch}ul.plain li{margin-bottom:6px}
+footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;color:var(--mute)}
+@media (max-width:860px){.hero,.sec,.two,.three,.links{grid-template-columns:1fr}.hero{padding-top:36px;gap:24px}h1{font-size:2.1rem}.three>div{border-right:0;border-bottom:1px solid var(--line)}.sec{gap:8px}body{font-size:16px}}
+</style></head><body>
+<header><div class="w"><span>Small language models · two measured studies</span><nav><a href="#how">How</a><a href="#finance">Financial reports</a><a href="#payments">Payment requests</a><a href="#limits">What did not work</a></nav></div></header>
+
+<div class="w">
+<div class="hero">
+<div><p class="eyebrow">The finding</p>
+<h1>A small model becomes dependable when the system around it does the checking.</h1>
+<p class="lead">On two financial tasks, small open models were right about half the time on their own. With checks, fine-tuning and selective escalation they reached {{fin_b}}% and {{p_l5}}%, close to a large model at a fraction of its cost.</p></div>
+<div>{{hero}}
+<div class="key"><span><i style="background:var(--grey)"></i>small model alone</span><span><i style="background:var(--green)"></i>our setup</span><span><i class="bar" style="background:var(--slate)"></i>large model alone</span></div></div>
+</div>
+</div>
+
+<section id="how"><div class="w sec"><div class="tag">Why it works</div><div>
+<h2>Three moves did it, and they are the same on both tasks.</h2>
+<p>None of them is a better prompt. Each one is code or training around the model.</p>
+<div class="three">
+<div><div class="n">01 · CHECK</div><h3>Verify every answer in code</h3><div class="num g">{{p_alone_w}} <small>&rarr;</small> {{p_l4_w}}</div><p>wrong money-moving actions in 150 payment requests, once rules check each action against the account before it runs.</p></div>
+<div><div class="n">02 · TUNE</div><h3>Train the model on the task</h3><div class="num g">{{p_ft_base}}% <small>&rarr;</small> {{p_ft}}%</div><p>on payment requests after 800 training examples on a free GPU. On financial reports the same step lifted trusted answers from {{pa0}}% to {{pa}}% correct.</p></div>
+<div><div class="n">03 · ESCALATE</div><h3>Send only doubtful cases up</h3><div class="num g">1 in 2</div><p>financial questions never reach the large model. The whole setup costs ${{fin_cost}} per 1,000 questions against ${{big_cost}} for the large model on everything.</p></div>
+</div>
+</div></div></section>
+
+<section id="finance"><div class="w sec"><div class="tag">Evidence 1<br>Financial reports</div><div>
+<h2>Two small models that agree are right {{pa}}% of the time.</h2>
+<p>The task: read one page of a company's annual report and work out a figure, such as a growth rate or a share of a total. The test is {{N}} questions about banks, insurers and payment companies from FinQA, a public benchmark written by finance experts.</p>
+<div class="stat"><div><b>{{fin_a}}%</b><span>one small model alone</span></div><div><b class="g">{{fin_b}}%</b><span>our setup</span></div><div><b class="s">{{fin_big}}%</b><span>large model on everything</span></div><div><b>{{fin_ratio}}×</b><span>cheaper than the large model</span></div></div>
+<div class="fig"><h4>Agreement is the signal for when to trust a small model</h4><p class="cap">Each question is answered by two different small models, one of them fine-tuned. Code compares the two numbers.</p>{{flow}}</div>
+<div class="two">
+<div class="fig"><h4>Same accuracy as the large model, lower cost</h4><p class="cap">Share of questions correct against cost. Up and to the left is better.</p>{{sc_fin}}</div>
+<div class="fig"><h4>What "agree" buys</h4><p class="cap">Out of every 100 answers.</p>
+<p class="small" style="margin:6px 0 6px">One small model alone: {{fin_a}} correct, and no way to tell which</p>{{t_al}}
+<p class="small" style="margin:18px 0 6px">Answers the two models agree on: {{pa}} correct</p>{{t_ag}}
+<p class="small" style="margin-top:16px">Fine-tuning took 36 minutes on a free GPU with 1,026 solved questions. Alone it moved the model from {{fin_a}}% to {{pt}}%.</p></div>
+</div>
+</div></div></section>
+
+<section id="payments"><div class="w sec"><div class="tag">Evidence 2<br>Payment requests</div><div>
+<h2>Rules in code stopped almost every wrong payment action.</h2>
+<p>The task: turn a plain-language request ("refund Noah's last order and send him the invoice") into the right actions on a payments account with 23 available tools. The test is 150 unseen requests, a quarter of which should be refused because the account does not allow them.</p>
+<div class="stat"><div><b>{{p_alone}}%</b><span>small model alone</span></div><div><b class="g">{{p_l4}}%</b><span>with four layers of code</span></div><div><b class="g">{{p_l5}}%</b><span>plus escalation</span></div><div><b class="s">{{p_big}}%</b><span>large model alone, at 10× the cost</span></div></div>
+<div class="fig"><h4>Each layer of code adds accuracy, on three different small models</h4><p class="cap">Share of the 150 requests handled exactly right as layers are added, left to right.</p>{{ladder}}</div>
+<div class="two">
+<div class="fig"><h4>Wrong money-moving actions</h4><p class="cap">Refunds, cancellations and invoices that should not have happened, out of 150 requests.</p>{{wrong}}</div>
+<div class="fig"><h4>Near the large model at a tenth of the cost</h4><p class="cap">Share of requests correct against cost.</p>{{sc_pay}}</div>
+</div>
+</div></div></section>
+
+<section id="limits"><div class="w sec"><div class="tag">Honest account</div><div>
+<h2>What did not work, and where a language model is not needed.</h2>
+<div class="fig"><h4>On financial reports, six code-only techniques did not beat the model working alone</h4><p class="cap">100 practice questions, one small model. The mistakes are choosing the wrong row or year, which a calculator cannot repair. A few points either way is within chance at this sample size.</p>{{dots}}</div>
+<div class="fig"><h4>On payment requests, classical machine learning matched the small language model</h4><p class="cap">The task turned out to be mostly sorting requests into types. A text classifier with hand-written rules, trained in seconds, did as well. The rule check lifted both to 89%.</p>{{grouped}}</div>
+<div class="call"><p><b>What this means for choosing a task.</b> A language model earns its place where the answer has to be read and reasoned out of a document, as with the financial reports. Where requests fall into a fixed set of types, try a classifier first and keep the rule check.</p></div>
+<h3 style="margin-top:28px">Limits of these results</h3>
+<ul class="plain">
+<li>On financial reports about half the questions still go to the large model, and the benchmark supplies the right page. Finding that page in a full report is not tested.</li>
+<li>The payment requests were generated for this study and reworded by a separate model; the financial questions are from a public benchmark.</li>
+<li>All figures are single runs on unseen test sets of {{N}} and 150 items. The fine-tuned pair's financial result combines recorded answers from separate runs.</li>
+</ul>
+<div class="links">
+<a href="fin/index.html"><b>Financial reports in full</b><span>Every question, every answer, and one worked example.</span></a>
+<a href="tools.html"><b>Payment requests in full</b><span>The five layers step by step, with recorded walkthroughs.</span></a>
+<a href="https://github.com/eshwarpotturi/slm-opti"><b>Code, results and logs</b><span>Everything needed to rerun both studies.</span></a>
+</div>
+</div></div></section>
+
+<footer><div class="w">Models: Gemma 3 4B, Ministral 3B, Llama 3.1 8B (small); Claude Haiku 4.5 and Claude Sonnet 4.5 (large). Financial data: FinQA, Chen et al., 2021, MIT licence. Costs are list prices per 1,000 requests; the fine-tuned model's own running cost is not included.</div></footer>
+</body></html>
