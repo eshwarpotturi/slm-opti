@@ -3,7 +3,8 @@
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 0      the model alone, thinking step by step
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1      1 = calculator: the model reasons, then writes a formula; code does the arithmetic
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 12     2 = source check: every figure in the formula must be in the report; one retry
-  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 123    3 = vote: five attempts, the most common result wins
+  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 123    3 = worked examples: the four most similar solved questions from the training split
+  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1234   4 = vote: five attempts, the most common result wins
 
 Results go to fin/results/<model>__L<layers>-<tag>.jsonl. Resumable.
 """
@@ -12,6 +13,7 @@ import ast
 import collections
 import concurrent.futures as cf
 import json
+import math
 import operator
 import os
 import re
@@ -71,6 +73,7 @@ def clean_formula(f):
     f = str(f).replace("×", "*").replace("÷", "/").replace("−", "-").replace("–", "-").replace("^", "**")
     f = re.sub(r"(?<=\d),(?=\d{3}\b)", "", f)
     f = re.sub(r"[$€£]", "", f)
+    f = re.sub(r"(?i)\b(millions?|billions?|thousands?|usd|dollars?|shares?|bps|basis points)\b", "", f)
     f = re.sub(r"(\d)\s*%", r"\1/100", f)
     if "=" in f and not re.search(r"[<>]=", f):
         f = f.split("=")[0]
@@ -131,11 +134,9 @@ ALONE = ("You are a financial analyst. Read the extract from a company's annual 
          "Work it out step by step, then finish with one line in exactly this form:\nANSWER: <a single number, or yes or no>\n"
          "Do not put units or words on that line. Give a percentage as the percent number, for example 7.52 for 7.52%. Keep at least two decimal places.")
 TOOL = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
-        "First, in a few short lines, say which figures the question needs and where each one is printed (row and year).\n"
-        "Do not do the arithmetic yourself: a calculator will work out your formula.\n"
+        "Work it out step by step, but do not do the arithmetic yourself: a calculator will work out your formula.\n"
         "Finish with one line in exactly this form:\nFORMULA: <arithmetic with + - * / and brackets, using figures copied exactly from the extract>\n"
-        "A percentage change is (new - old) / old. A change is new - old. A share of a total is part / total.\n"
-        "Only if the question asks yes or no, write a comparison such as FORMULA: 286.61 > 198.09")
+        "Put only numbers and signs on that line, no words or units. If the question asks yes or no, finish with ANSWER: yes or ANSWER: no instead.")
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
 
 
@@ -157,17 +158,75 @@ def read_formula(text):
     return m[-1].strip().strip("*").strip() if m else None
 
 
+# ---------- layer 3: worked examples from the training split ----------
+_EX = {}
+
+
+def words(q):
+    return [w for w in re.findall(r"[a-z]+", q.lower()) if len(w) > 2]
+
+
+def examples(question, k=4):
+    """The k solved training questions most alike in wording (TF-IDF cosine). None of them is in any test file."""
+    if not _EX:
+        pool = [x for x in json.load(open(os.path.join(HERE, "data", "train.json"))) if x.get("formula") and len(x["facts"]) <= 4]
+        pool = [x for x in pool if _safe(x)]
+        df = collections.Counter(w for x in pool for w in set(words(x["question"])))
+        idf = {w: math.log(len(pool) / c) for w, c in df.items()}
+        vecs = []
+        for x in pool:
+            v = collections.Counter(words(x["question"]))
+            v = {w: c * idf[w] for w, c in v.items()}
+            n = math.sqrt(sum(a * a for a in v.values())) or 1.0
+            vecs.append({w: a / n for w, a in v.items()})
+        _EX.update(pool=pool, idf=idf, vecs=vecs)
+    q = collections.Counter(words(question))
+    q = {w: c * _EX["idf"].get(w, 0.0) for w, c in q.items()}
+    n = math.sqrt(sum(a * a for a in q.values())) or 1.0
+    scored = sorted(((sum(a / n * v.get(w, 0.0) for w, a in q.items()), i) for i, v in enumerate(_EX["vecs"])), reverse=True)
+    out, seen = [], set()
+    for _, i in scored:
+        x = _EX["pool"][i]
+        if x["question"] in seen:
+            continue
+        seen.add(x["question"])
+        out.append(x)
+        if len(out) == k:
+            break
+    return out
+
+
+def _safe(x):
+    try:
+        return correct(calc(x["formula"]), x["answer"])
+    except Exception:
+        return False
+
+
+def example_text(question):
+    lines = ["Here are similar questions from other reports, already solved. They show the form of the formula only; their figures are not yours."]
+    for x in examples(question):
+        last = "ANSWER: %s" % x["answer"] if isinstance(x["answer"], str) else "FORMULA: %s" % x["formula"]
+        lines.append("Q: %s\nFigures: %s\n%s" % (x["question"], " ".join(x["facts"])[:400], last))
+    return "\n\n".join(lines)
+
+
 # ---------- one question ----------
 def attempt(model, t, layers, temperature, tuned):
     """One pass: returns (answer, formula, cost, notes)."""
     doc, cost, notes = render(t), 0.0, []
-    msgs = [{"role": "user", "content": (TUNED if tuned else TOOL) + "\n\n" + ask(t)}]
+    head = TUNED if tuned else TOOL + ("\n\n" + example_text(t["question"]) if "3" in layers else "")
+    msgs = [{"role": "user", "content": head + "\n\n" + ask(t)}]
     answer = formula = None
     for turn in range(2 if "2" in layers else 1):
         text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=500)
         cost += c
         formula = text.strip().splitlines()[0] if (tuned and text.strip()) else read_formula(text)
         problem = None
+        said = re.findall(r"ANSWER\s*:\s*\**\s*(yes|no)\b", text or "", flags=re.I)
+        if not formula and said:
+            answer = said[-1].lower()
+            break
         if not formula:
             problem = "Your reply had no FORMULA line. Finish with one line starting FORMULA:"
         else:
@@ -194,7 +253,7 @@ def solve(model, t, layers, tuned=False):
     if not layers.strip("0"):
         text, cost, _ = stack.chat(model, [{"role": "user", "content": ALONE + "\n\n" + ask(t)}], temperature=0, max_tokens=500)
         return {"answer": read_alone(text), "cost": cost, "raw": text[-600:]}
-    if "3" not in layers:
+    if "4" not in layers:
         a, f, cost, notes = attempt(model, t, layers, 0, tuned)
         return {"answer": a, "formula": f, "cost": cost, "notes": notes}
     tries, cost = [], 0.0
