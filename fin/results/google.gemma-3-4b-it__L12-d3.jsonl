@@ -1,0 +1,100 @@
+{"answer": 3044.322960470984, "formula": "(36197 / 1189) * 100", "cost": 6.04e-05, "notes": [], "id": "PNC/2013/page_207.pdf-1", "gold": 30.44323, "right": true}
+{"answer": 0.935, "formula": "(193.50 - 100.00) / 100.00", "cost": 4.076e-05, "notes": [], "id": "C/2017/page_328.pdf-1", "gold": 0.935, "right": true}
+{"answer": 0.303, "formula": "303 / 1000", "cost": 5.292e-05, "notes": [], "id": "STT/2011/page_83.pdf-1", "gold": 114.0, "right": false}
+{"answer": 995.0, "formula": "(339235 - 338240)", "cost": 4.94e-05, "notes": [], "id": "CME/2017/page_97.pdf-5", "gold": 995.0, "right": true}
+{"answer": 127.4, "formula": "637 / 5.0", "cost": 5.42e-05, "notes": [], "id": "V/2008/page_17.pdf-1", "gold": 127.4, "right": true}
+{"answer": -1.0, "formula": "(1356 - 2220) / (2220 - 1356) = -864 / 864 = -1", "cost": 6.324e-05, "notes": [], "id": "PNC/2013/page_62.pdf-2", "gold": 3576.0, "right": false}
+{"answer": 1.106234096692112, "formula": "(1739 / 1572)", "cost": 6.296000000000001e-05, "notes": [], "id": "SPGI/2018/page_74.pdf-1", "gold": 1.15663, "right": false}
+{"answer": 86.84652154455804, "formula": "(2996337 / 3450152) * 100", "cost": 4.716e-05, "notes": [], "id": "ETFC/2007/page_126.pdf-3", "gold": 0.86847, "right": true}
+{"answer": 778000.0, "formula": "414000 + 364000", "cost": 4.4920000000000004e-05, "notes": [], "id": "AON/2010/page_28.pdf-1", "gold": 778000.0, "right": true}
+{"answer": 2.0714285714285716, "formula": "(1.8 + 1.1) / 1.4 = 2.27", "cost": 4.6439999999999996e-05, "notes": [], "id": "STT/2008/page_83.pdf-2", "gold": 1.25, "right": false}
+{"answer": 4.85514403292181, "formula": "11798 / 2430", "cost": 5.336e-05, "notes": [], "id": "CB/2010/page_200.pdf-4", "gold": 4.85514, "right": true}
+{"answer": 37.81, "formula": "(137.81 - 100.00) / 100.00 * 100", "cost": 3.9880000000000004e-05, "notes": [], "id": "ETFC/2014/page_26.pdf-2", "gold": 0.3781, "right": true}
+{"answer": 0.5, "formula": "(3 - 2) / 2", "cost": 4.96e-05, "notes": [], "id": "GS/2017/page_106.pdf-4", "gold": 1.0, "right": false}
+{"answer": 1.588888888888889, "formula": "(14.3 / 900) * 100", "cost": 4.6e-05, "notes": [], "id": "AON/2009/page_48.pdf-4", "gold": 0.22556, "right": false}
+{"answer": -150.97826086956522, "formula": "(-469 - 920) / 920 * 100", "cost": 0.000112, "notes": ["These figures in your formula are not printed in the extract"], "id": "C/2010/page_223.pdf-3", "gold": -0.52485, "right": false}
+{"answer": 708716.6666666666, "formula": "(638401 + 1230881 + 256868) / 3", "cost": 6.704e-05, "notes": [], "id": "CB/2010/page_200.pdf-3", "gold": 1063076.5, "right": false}
+{"answer": 8.5, "formula": "(19 - 2) / 2", "cost": 0.00011976, "notes": ["Your reply had no FORMULA line"], "id": "PNC/2009/page_46.pdf-2", "gold": -1.0, "right": false}
+{"answer": 69.6762238122201, "formula": "(13536 / 19427) * 100", "cost": 4.4880000000000004e-05, "notes": [], "id": "GPN/2009/page_70.pdf-2", "gold": 0.69676, "right": true}
+{"answer": 383.0, "formula": "(150 - (-233))", "cost": 4.952e-05, "notes": [], "id": "GS/2013/page_152.pdf-2", "gold": 383.0, "right": true}
+{"answer": -13.199999999999989, "formula": "(108.4 - 121.6)", "cost": 6.2e-05, "notes": [], "id": "C/2008/page_102.pdf-2", "gold": -13.2, "right": true}
+{"answer": 48.0, "formula": "240.0 / 5.0", "cost": 6.064e-05, "notes": [], "id": "TROW/2010/page_22.pdf-2", "gold": 48.0, "right": true}
+{"answer": -35.62, "formula": "(-26 / 73) * 100", "cost": 0.00018112, "notes": ["Your reply had no FORMULA line", "These figures in your formula are not printed in the extract"], "id": "GS/2017/page_143.pdf-2", "gold": -0.35616, "right": true}
+{"answer": 698.0, "formula": "(698 - 0) / 0", "cost": 0.00019344, "notes": ["Your formula divides by zero", "Your formula divides by zero"], "id": "BLK/2013/page_124.pdf-2", "gold": 2448.0, "right": false}
+{"answer": 16.5, "formula": "(19 + 14) / 2 = 16.50", "cost": 5.9520000000000006e-05, "notes": [], "id": "PNC/2009/page_46.pdf-4", "gold": 16.5, "right": true}
+{"answer": 0.07513163223977319, "formula": "(5309 - 4938) / 4938", "cost": 9.708e-05, "notes": [], "id": "BLK/2014/page_119.pdf-1", "gold": 0.07513, "right": true}
+{"answer": 0.45641845196959224, "formula": "(5468 + 5099) / 23152", "cost": 4.6240000000000005e-05, "notes": [], "id": "GS/2012/page_165.pdf-2", "gold": 0.23618, "right": false}
+{"answer": 12.43, "formula": "(15.64 * 100) / 126.23", "cost": 0.00010948, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "L/2015/page_59.pdf-4", "gold": -0.1239, "right": false}
+{"answer": 1.3, "formula": "1.3 * 1", "cost": 4.5e-05, "notes": [], "id": "CME/2017/page_97.pdf-4", "gold": 1300.0, "right": false}
+{"answer": -7.7578139621935245, "formula": "((9857 - 10686) / 10686) * 100", "cost": 4.848e-05, "notes": [], "id": "HIG/2011/page_188.pdf-2", "gold": -0.07758, "right": true}
+{"answer": 86.5, "formula": "(82 + 91) / 2", "cost": 4.0159999999999995e-05, "notes": [], "id": "PNC/2015/page_159.pdf-2", "gold": 86.5, "right": true}
+{"answer": -0.04999999999999999, "formula": "(14 / 100) - (19 / 100)", "cost": 5.94e-05, "notes": [], "id": "PNC/2009/page_46.pdf-3", "gold": "no", "right": false}
+{"answer": -8683.0, "formula": "-8683", "cost": 4.928e-05, "notes": [], "id": "GS/2014/page_136.pdf-1", "gold": 6999.0, "right": false}
+{"answer": 846.0, "formula": "846", "cost": 4.536e-05, "notes": [], "id": "AON/2009/page_46.pdf-2", "gold": 846.0, "right": true}
+{"answer": 56.61804430037818, "formula": "(2096 / 3702) * 100", "cost": 5.0119999999999994e-05, "notes": [], "id": "GS/2017/page_106.pdf-2", "gold": 0.56618, "right": true}
+{"answer": -141674.0, "formula": "62154 - 203828", "cost": 5.164e-05, "notes": [], "id": "GPN/2017/page_77.pdf-3", "gold": 62154.0, "right": false}
+{"answer": 0.23125390714967262, "formula": "(74843 - 60786) / 60786", "cost": 5.896e-05, "notes": [], "id": "STT/2009/page_73.pdf-1", "gold": 0.23125, "right": true}
+{"answer": 19.25702134409295, "formula": "(77699 / 403484) * 100", "cost": 6.056e-05, "notes": [], "id": "BLK/2012/page_37.pdf-2", "gold": 0.19257, "right": true}
+{"answer": 0.09875583203732503, "formula": "127/1286", "cost": 6.252e-05, "notes": [], "id": "BLK/2013/page_125.pdf-2", "gold": 0.09876, "right": true}
+{"answer": 2.3738317757009346, "formula": "(254000 / 107000)", "cost": 4.7560000000000005e-05, "notes": [], "id": "ETFC/2013/page_26.pdf-2", "gold": 2.37383, "right": true}
+{"answer": 0.13414634146341464, "formula": "(82.0 - 71.0) / 82.0", "cost": 6.332e-05, "notes": [], "id": "C/2008/page_102.pdf-3", "gold": -11.0, "right": false}
+{"answer": 318.0, "formula": "318", "cost": 4.34e-05, "notes": [], "id": "AON/2014/page_47.pdf-3", "gold": 1492.0, "right": false}
+{"answer": 66.25, "formula": null, "cost": 0.00022748, "notes": ["These figures in your formula are not printed in the extract", "Your reply had no FORMULA line"], "id": "GS/2017/page_143.pdf-1", "gold": -0.39896, "right": false}
+{"answer": 4.183266932270916, "formula": "1050 / 251", "cost": 7.096e-05, "notes": [], "id": "PNC/2009/page_41.pdf-3", "gold": 4.18327, "right": true}
+{"answer": 0.11579892280071813, "formula": "258 / 2228", "cost": 4.8599999999999995e-05, "notes": [], "id": "MS/2014/page_292.pdf-2", "gold": 0.1158, "right": true}
+{"answer": 3.8, "formula": "(11.4 - 7.6) / 7.6", "cost": 0.00012, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "AON/2014/page_47.pdf-1", "gold": 0.02533, "right": false}
+{"answer": 0.22742040285899934, "formula": "(188.9 - 153.9) / 153.9", "cost": 4.9680000000000005e-05, "notes": [], "id": "C/2017/page_328.pdf-4", "gold": 0.22742, "right": true}
+{"answer": 117.08029197080292, "formula": "(802 / 685) * 100", "cost": 5.96e-05, "notes": [], "id": "PNC/2013/page_112.pdf-2", "gold": 0.06298, "right": false}
+{"answer": 0.15145659516936846, "formula": "453815 / 2996337", "cost": 4.695999999999999e-05, "notes": [], "id": "ETFC/2007/page_126.pdf-2", "gold": 0.15146, "right": true}
+{"answer": 0.04, "formula": "2 / 50", "cost": 5.896e-05, "notes": [], "id": "PNC/2009/page_46.pdf-1", "gold": 1.0, "right": false}
+{"answer": 0.31596091205211724, "formula": "(404 - 307) / 307", "cost": 6.792e-05, "notes": [], "id": "BLK/2012/page_160.pdf-1", "gold": 0.41754, "right": false}
+{"answer": 1.0, "formula": "(1211 + 266) / (1211 + 266)", "cost": 5.992e-05, "notes": [], "id": "PNC/2011/page_87.pdf-4", "gold": 1542.0, "right": false}
+{"answer": 43.891993902881616, "formula": "(6047 / 13777) * 100", "cost": 6.308e-05, "notes": [], "id": "HIG/2008/page_318.pdf-1", "gold": 0.43892, "right": true}
+{"answer": 0.2642370888809908, "formula": "2899.5 / 10973.1", "cost": 9.56e-05, "notes": [], "id": "CME/2012/page_70.pdf-3", "gold": 0.26424, "right": true}
+{"answer": 16.417910447761194, "formula": "(77 / 469) * 100", "cost": 4.8519999999999996e-05, "notes": [], "id": "C/2010/page_223.pdf-2", "gold": 0.16418, "right": true}
+{"answer": 1000.0, "formula": "(17700 / 1000)", "cost": 0.00014856, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "RE/2015/page_33.pdf-3", "gold": 15.4698, "right": false}
+{"answer": 315.0, "formula": "392 - 77", "cost": 4.508e-05, "notes": [], "id": "C/2010/page_223.pdf-4", "gold": 469.0, "right": false}
+{"answer": 2.0990590424981903, "formula": "(40.6 / 1934.2) * 100", "cost": 4.116e-05, "notes": [], "id": "ETFC/2011/page_82.pdf-1", "gold": 0.02099, "right": true}
+{"answer": 37.4, "formula": "(130.9 - 93.5)", "cost": 0.00012103999999999999, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "C/2017/page_328.pdf-3", "gold": -0.374, "right": false}
+{"answer": -2.63, "formula": "(-2.63 / 100) * 100", "cost": 0.00010528, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "L/2015/page_59.pdf-1", "gold": -0.0263, "right": true}
+{"answer": 74.52941176470588, "formula": "(1267 / 17)", "cost": 9.200000000000001e-05, "notes": ["These figures in your formula are not printed in the extract"], "id": "AON/2009/page_48.pdf-3", "gold": 7452.94118, "right": true}
+{"answer": 218169.12395297104, "formula": "83382 + 63060 + 35269 + 21598 + 14860 + 30869 / 249038", "cost": 5.032e-05, "notes": [], "id": "FIS/2007/page_94.pdf-2", "gold": 0.33482, "right": false}
+{"answer": 6.0, "formula": "(1951 - 1945)", "cost": 4.712e-05, "notes": [], "id": "MS/2014/page_267.pdf-1", "gold": 6.0, "right": true}
+{"answer": 62.699564586357035, "formula": "(43.2 / 68.9) * 100", "cost": 6.892e-05, "notes": [], "id": "MS/2017/page_74.pdf-2", "gold": 0.627, "right": true}
+{"answer": 96.04159159932053, "formula": "(13536 + 4091 + 1031) / 19427 * 100", "cost": 0.00012952, "notes": ["These figures in your formula are not printed in the extract"], "id": "GPN/2009/page_70.pdf-3", "gold": 0.96042, "right": true}
+{"answer": 66.05123949797739, "formula": "(108256 / 163897) * 100", "cost": 5.224e-05, "notes": [], "id": "PNC/2016/page_177.pdf-1", "gold": 0.66051, "right": true}
+{"answer": 6640563.0, "formula": "6640563", "cost": 4.068e-05, "notes": [], "id": "V/2013/page_41.pdf-1", "gold": 0.89911, "right": false}
+{"answer": 0.05269503422771721, "formula": "(181612 - 172521) / 172521", "cost": 4.5640000000000003e-05, "notes": [], "id": "PNC/2018/page_171.pdf-2", "gold": 0.0527, "right": true}
+{"answer": 0.6732999999999998, "formula": "(205.14 - 100) / 100 - (137.81 - 100) / 100", "cost": 4.940000000000001e-05, "notes": [], "id": "ETFC/2014/page_26.pdf-4", "gold": -0.6733, "right": false}
+{"answer": 73.86265626394108, "formula": "(298024 / 403484) * 100", "cost": 6.088e-05, "notes": [], "id": "BLK/2012/page_37.pdf-1", "gold": 0.73863, "right": true}
+{"answer": 0.8075000000000001, "formula": "(180.75 / 100) - 1", "cost": 4.936e-05, "notes": [], "id": "L/2015/page_59.pdf-3", "gold": 0.8075, "right": true}
+{"answer": 17153.0, "formula": "(16254 + 899)", "cost": 7.512e-05, "notes": [], "id": "C/2008/page_211.pdf-2", "gold": 2.50023, "right": false}
+{"answer": 0.5810635538261998, "formula": "7616 / 13107", "cost": 6.032e-05, "notes": [], "id": "PNC/2011/page_87.pdf-1", "gold": 0.22735, "right": false}
+{"answer": 0.01538461538461533, "formula": "(13.2 - 13.0) / 13.0", "cost": 6.212e-05, "notes": [], "id": "PNC/2011/page_78.pdf-3", "gold": 0.2, "right": false}
+{"answer": 96.04159159932053, "formula": "(13536 + 4091 + 1031) / 19427 * 100", "cost": 0.00012952, "notes": ["These figures in your formula are not printed in the extract"], "id": "GPN/2009/page_70.pdf-4", "gold": 0.96042, "right": true}
+{"answer": 0.0828803004843333, "formula": "(16.77 / 20234) * 100", "cost": 4.772e-05, "notes": [], "id": "GS/2012/page_165.pdf-3", "gold": 3.464, "right": false}
+{"answer": 7.362216937235033, "formula": "(142.4 / 1934.2) * 100", "cost": 3.9160000000000005e-05, "notes": [], "id": "ETFC/2011/page_82.pdf-3", "gold": 0.07362, "right": true}
+{"answer": 0.20212765957446807, "formula": "(38 / 188)", "cost": 7.392e-05, "notes": [], "id": "C/2008/page_211.pdf-4", "gold": 0.20213, "right": true}
+{"answer": 0.39718309859154927, "formula": "(28.2 / 71.0)", "cost": 6.828e-05, "notes": [], "id": "C/2008/page_102.pdf-1", "gold": 0.94444, "right": false}
+{"answer": 1.0, "formula": "(254000 - 0) / 254000", "cost": 4.764e-05, "notes": [], "id": "ETFC/2013/page_26.pdf-1", "gold": 0.64961, "right": false}
+{"answer": 33.923500000000004, "formula": "(339235 / 1000000) * 100", "cost": 4.66e-05, "notes": [], "id": "CME/2017/page_97.pdf-2", "gold": 0.33924, "right": true}
+{"answer": 1.0294914648069438, "formula": "74843 / 72699", "cost": 4.380000000000001e-05, "notes": [], "id": "STT/2009/page_73.pdf-2", "gold": 1.02949, "right": true}
+{"answer": 2.3544973544973544, "formula": "(1134 + 753 + 783) / 1134", "cost": 0.00010348, "notes": [], "id": "BLK/2014/page_119.pdf-2", "gold": 2672.0, "right": false}
+{"answer": 0.2192327890475202, "formula": "(99832 - 81881) / 81881", "cost": 5.2560000000000005e-05, "notes": [], "id": "STT/2011/page_83.pdf-2", "gold": 0.21923, "right": true}
+{"answer": 1.4885712212466438, "formula": "205.14 / 137.81", "cost": 3.7e-05, "notes": [], "id": "ETFC/2014/page_26.pdf-3", "gold": 1.48857, "right": true}
+{"answer": 15.0, "formula": "2014 - 1999 = 2014 - 1999 = 14.5", "cost": 4.9479999999999994e-05, "notes": [], "id": "MS/2014/page_292.pdf-1", "gold": 9.0, "right": false}
+{"answer": 0.37810000000000005, "formula": "(137.81 - 100.00) / 100.00", "cost": 4.044e-05, "notes": [], "id": "ETFC/2014/page_26.pdf-1", "gold": 0.3781, "right": true}
+{"answer": 4061.0, "formula": "(2022 + 7) + (2022 + 10)", "cost": 0.00020516, "notes": ["These figures in your formula are not printed in the extract"], "id": "CME/2010/page_42.pdf-1", "gold": 2041.0, "right": false}
+{"answer": 16.417910447761194, "formula": "(77 / 469) * 100", "cost": 4.940000000000001e-05, "notes": [], "id": "C/2010/page_223.pdf-1", "gold": 0.19643, "right": false}
+{"answer": -0.06563421828908554, "formula": "(1267 - 1356) / 1356", "cost": 4.4760000000000005e-05, "notes": [], "id": "AON/2009/page_48.pdf-1", "gold": -0.06563, "right": true}
+{"answer": 0.017427787639180247, "formula": "(6305 - 6197) / 6197", "cost": 4.740000000000001e-05, "notes": [], "id": "AON/2009/page_46.pdf-3", "gold": 0.01743, "right": true}
+{"answer": 57.593123209169065, "formula": "(40.2 / 69.8) * 100", "cost": 0.00013868000000000002, "notes": ["Your reply had no FORMULA line"], "id": "MS/2017/page_74.pdf-1", "gold": 0.57593, "right": true}
+{"answer": 71.62284678150499, "formula": "(1580 / 2206) * 100", "cost": 8.136e-05, "notes": [], "id": "BLK/2017/page_122.pdf-2", "gold": 0.71623, "right": true}
+{"answer": 0.10497667185069985, "formula": "(135 / 1286)", "cost": 0.00012424000000000002, "notes": ["Your reply had no FORMULA line"], "id": "BLK/2013/page_125.pdf-1", "gold": 0.10498, "right": true}
+{"answer": 13.153478455441963, "formula": "(453815 / 3450152) * 100", "cost": 4.804000000000001e-05, "notes": [], "id": "ETFC/2007/page_126.pdf-1", "gold": 0.13153, "right": true}
+{"answer": 158615.38, "formula": "(1031 / 6.5) * 1000", "cost": 0.00012336, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "GPN/2009/page_70.pdf-1", "gold": 103.1, "right": false}
+{"answer": -864.0, "formula": "(1356 - 2220)", "cost": 0.00012092000000000001, "notes": ["Your reply had no FORMULA line"], "id": "PNC/2013/page_62.pdf-1", "gold": -864.0, "right": true}
+{"answer": 381.0, "formula": "(6266 - 5885)", "cost": 0.00010656000000000001, "notes": ["Your reply had no FORMULA line"], "id": "CB/2010/page_200.pdf-1", "gold": 2634.0, "right": false}
+{"answer": 40.0, "formula": "(7000 - 5000) / 5000", "cost": 0.00021020000000000001, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "CME/2012/page_70.pdf-1", "gold": 0.4, "right": true}
+{"answer": 43.78, "formula": "6012 / 13800000000", "cost": 0.00014108, "notes": ["These figures in your formula are not printed in the extract", "These figures in your formula are not printed in the extract"], "id": "HIG/2008/page_318.pdf-2", "gold": 0.43638, "right": true}
+{"answer": 1.1561497326203207, "formula": "(208.1 - 100.0) / 100.0 / ((193.5 - 100.0) / 100.0)", "cost": 0.00014800000000000002, "notes": ["These figures in your formula are not printed in the extract"], "id": "C/2017/page_328.pdf-2", "gold": 1.15615, "right": true}
