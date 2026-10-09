@@ -1,7 +1,7 @@
 """Runs a small model on financial-report questions, alone or with the improvement layers.
 
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 0      the model alone, thinking step by step
-  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1      1 = calculator: the model reasons, then writes a formula; code does the arithmetic
+  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1      1 = calculator: the model also writes its arithmetic as a formula; code redoes it and that result is used
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 12     2 = source check: every figure in the formula must be in the report; one retry
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 123    3 = worked examples: the four most similar solved questions from the training split
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1234   4 = vote: five attempts, the most common result wins
@@ -133,10 +133,9 @@ def unsupported(formula, doc, question):
 ALONE = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
          "Work it out step by step, then finish with one line in exactly this form:\nANSWER: <a single number, or yes or no>\n"
          "Do not put units or words on that line. Give a percentage as the percent number, for example 7.52 for 7.52%. Keep at least two decimal places.")
-TOOL = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
-        "Work it out step by step, but do not do the arithmetic yourself: a calculator will work out your formula.\n"
-        "Finish with one line in exactly this form:\nFORMULA: <arithmetic with + - * / and brackets, using figures copied exactly from the extract>\n"
-        "Put only numbers and signs on that line, no words or units. If the question asks yes or no, finish with ANSWER: yes or ANSWER: no instead.")
+TOOL = (ALONE + "\nAfter the ANSWER line add one more line with the arithmetic behind it, numbers and signs only, "
+        "using figures copied exactly from the extract:\nFORMULA: <for example (5829 - 5735) / 5735>\n"
+        "A calculator will redo that arithmetic, so the formula must be complete. For a yes or no question leave the FORMULA line out.")
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
 
 
@@ -203,49 +202,63 @@ def _safe(x):
         return False
 
 
+def show_number(x):
+    """The answer as a person would write it: a share or a rate of change as a percent, anything else as it is."""
+    v = x["answer"]
+    return "%.2f" % (v * 100) if (abs(v) < 2 and "/" in x["formula"]) else "%g" % round(v, 2)
+
+
 def example_text(question):
-    lines = ["Here are similar questions from other reports, already solved. They show the form of the formula only; their figures are not yours."]
+    lines = ["Here are similar questions from other reports, already solved. They show how to set the answer out; their figures are not yours."]
     for x in examples(question):
-        last = "ANSWER: %s" % x["answer"] if isinstance(x["answer"], str) else "FORMULA: %s" % x["formula"]
+        last = "ANSWER: %s" % x["answer"] if isinstance(x["answer"], str) else "ANSWER: %s\nFORMULA: %s" % (show_number(x), x["formula"])
         lines.append("Q: %s\nFigures: %s\n%s" % (x["question"], " ".join(x["facts"])[:400], last))
     return "\n\n".join(lines)
 
 
 # ---------- one question ----------
 def attempt(model, t, layers, temperature, tuned):
-    """One pass: returns (answer, formula, cost, notes)."""
+    """One pass: returns (answer, formula, cost, notes). The calculator's result replaces the model's own arithmetic."""
     doc, cost, notes = render(t), 0.0, []
     head = TUNED if tuned else TOOL + ("\n\n" + example_text(t["question"]) if "3" in layers else "")
     msgs = [{"role": "user", "content": head + "\n\n" + ask(t)}]
     answer = formula = None
     for turn in range(2 if "2" in layers else 1):
-        text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=500)
+        text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=600)
         cost += c
+        said = None if tuned else read_alone(text)
         formula = text.strip().splitlines()[0] if (tuned and text.strip()) else read_formula(text)
+        if tuned and formula.lower() in ("yes", "no"):
+            return formula.lower(), None, cost, notes
+        if said in ("yes", "no"):
+            return said, None, cost, notes
+        if answer is None:
+            answer = said
         problem = None
-        said = re.findall(r"ANSWER\s*:\s*\**\s*(yes|no)\b", text or "", flags=re.I)
-        if not formula and said:
-            answer = said[-1].lower()
-            break
         if not formula:
-            problem = "Your reply had no FORMULA line. Finish with one line starting FORMULA:"
+            problem = "Your reply had no FORMULA line. Give the FORMULA line for your answer"
         else:
             try:
-                answer = calc(formula)
+                value = calc(formula)
+                if isinstance(value, str):
+                    raise ValueError("comparison")
                 bad = unsupported(formula, doc, t["question"]) if "2" in layers else []
                 if bad:
-                    problem = ("These figures in your formula are not printed in the extract: %s. Use only figures copied from the extract, "
-                               "and do no arithmetic in your head. Give the corrected FORMULA line." % ", ".join("%g" % b for b in bad))
+                    problem = ("These figures in your formula are not printed in the extract: %s. Use only figures copied from the extract "
+                               "and put every step of the arithmetic in the formula. Reply again with the ANSWER and FORMULA lines"
+                               % ", ".join("%g" % b for b in bad))
+                else:
+                    answer = value
             except ZeroDivisionError:
-                problem = "Your formula divides by zero. Give the corrected FORMULA line."
+                problem = "Your formula divides by zero. Reply again with the ANSWER and FORMULA lines"
             except Exception:
-                problem = "The calculator could not read your formula. Use only numbers and + - * / and brackets, one formula only. Give the corrected FORMULA line."
+                problem = "The calculator could not read your formula. Use only numbers and + - * / and brackets. Reply again with the ANSWER and FORMULA lines"
         if not problem:
             break
-        notes.append(problem.split(".")[0])
+        notes.append(problem.split(".")[0].split(":")[0])
         if tuned:
             break
-        msgs += [{"role": "assistant", "content": text[:1200]}, {"role": "user", "content": problem}]
+        msgs += [{"role": "assistant", "content": text[-1500:]}, {"role": "user", "content": problem + "."}]
     return answer, formula, cost, notes
 
 
