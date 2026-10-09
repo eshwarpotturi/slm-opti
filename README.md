@@ -1,5 +1,7 @@
 # Small model, safe actions
 
+**Results page: https://eshwarpotturi.github.io/slm-opti/**
+
 A small open model (Gemma 3 4B) is asked to act on a merchant's account at an online payments platform: refund an order, send an invoice, cancel a subscription. On its own it gets about half the requests right and often takes actions it should not. With five layers of ordinary code around it, the same model gets 89% right on requests it has never seen, and wrong money actions fall from 48 to 3.
 
 Nothing about the model changes: no fine-tuning, and the instruction text stays the same apart from the output wrapper.
@@ -73,6 +75,7 @@ A large model alone on the same requests has not been measured, so there is no r
 | `stack.py` | The five layers and the runner |
 | `score.py` | Parsing and marking |
 | `run_eval.py`, `report.py`, `ladder_report.py` | Baseline runner and score tables |
+| `build_page.py`, `page_template.html`, `index.html` | The results page, built from `results/` |
 | `results/` | Every model reply and its mark |
 
 ## Running it
