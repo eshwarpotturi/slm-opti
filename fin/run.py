@@ -139,7 +139,21 @@ EXTRA = ("\nAfter the ANSWER line add one more line with the arithmetic behind i
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
 
 
+def facts(t):
+    """Layer 5: every table cell written out with its row and column names, so no figure has to be found by position."""
+    head, out = [c.strip() for c in t["table"][0]], []
+    for r in t["table"][1:]:
+        cells = ["%s: %s" % (h or "value", c.strip()) for h, c in zip(head[1:], r[1:]) if c.strip()]
+        out.append("- %s -> %s" % (r[0].strip(), " ; ".join(cells)))
+    return "\n".join(["\n".join(t["before"]), "", "TABLE (%s), one row per line:" % (head[0] or "figures"), "\n".join(out), "", "\n".join(t["after"])]).strip()
+
+
+LAYERS = ""
+
+
 def ask(t):
+    if "5" in LAYERS:
+        return "QUESTION: %s\n\nEXTRACT:\n%s\n\nQUESTION (again): %s" % (t["question"], facts(t), t["question"])
     return "EXTRACT:\n%s\n\nQUESTION: %s" % (render(t), t["question"])
 
 
@@ -266,7 +280,7 @@ def attempt(model, t, layers, temperature, tuned):
 
 
 def solve(model, t, layers, tuned=False):
-    if not layers.strip("0") and not tuned:
+    if not layers.strip("05") and not tuned:
         text, cost, _ = stack.chat(model, [{"role": "user", "content": ALONE + "\n\n" + ask(t)}], temperature=0, max_tokens=500)
         return {"answer": read_alone(text), "cost": cost, "raw": text[-600:]}
     if "4" not in layers:
@@ -294,6 +308,8 @@ def main(argv=None):
     ap.add_argument("--tag", default="t"); ap.add_argument("--limit", type=int, default=0); ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--budget", type=float, default=170); ap.add_argument("--tuned", action="store_true")
     a = ap.parse_args(argv)
+    global LAYERS
+    LAYERS = a.layers
     tasks = json.load(open(os.path.join(HERE, a.tasks)))
     if a.limit:
         tasks = tasks[:a.limit]
