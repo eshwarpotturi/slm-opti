@@ -178,5 +178,9 @@ page = open(os.path.join(HERE, "site_template.html")).read()
 for k, v in d.items():
     page = page.replace("{{%s}}" % k, str(v))
 assert "{{" not in page, page[page.index("{{"):][:60]
+import re
+keep = lambda txt, tag, drop: re.sub(r"<!--%s-->.*?<!--/%s-->" % (drop, drop), "", txt, flags=re.S).replace("<!--%s-->" % tag, "").replace("<!--/%s-->" % tag, "")
+open(os.path.join(HERE, "full.html"), "w").write(keep(page, "ML", "PUB"))      # the complete account, kept for reference
+page = keep(page, "PUB", "ML")
 open(os.path.join(HERE, "index.html"), "w").write(page)
 print("index.html", len(page) // 1024, "KB", {k: v for k, v in d.items() if isinstance(v, (int, str)) and len(str(v)) < 8})

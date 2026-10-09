@@ -82,12 +82,12 @@ footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;col
 </div>
 </div></div></section>
 
-<section id="limits"><div class="w sec"><div class="tag">Honest account</div><div>
-<h2>What did not work, and where a language model is not needed.</h2>
+<section id="limits"><div class="w sec"><div class="tag"><!--ML-->Honest account<!--/ML--><!--PUB-->What did not work<!--/PUB--></div><div>
+<!--ML--><h2>What did not work, and where a language model is not needed.</h2><!--/ML--><!--PUB--><h2>What we tried that did not help.</h2><!--/PUB-->
 <div class="fig"><h4>On financial reports, six code-only techniques did not beat the model working alone</h4><p class="cap">100 practice questions, one small model. The mistakes are choosing the wrong row or year, which a calculator cannot repair. A few points either way is within chance at this sample size.</p>{{dots}}</div>
-<div class="fig"><h4>On payment requests, classical machine learning matched the small language model</h4><p class="cap">The task turned out to be mostly sorting requests into types. A text classifier with hand-written rules, trained in seconds, did as well. The rule check lifted both to 89%.</p>{{grouped}}</div>
+<!--ML--><div class="fig"><h4>On payment requests, classical machine learning matched the small language model</h4><p class="cap">The task turned out to be mostly sorting requests into types. A text classifier with hand-written rules, trained in seconds, did as well. The rule check lifted both to 89%.</p>{{grouped}}</div>
 <div class="call"><p><b>What this means for choosing a task.</b> A language model earns its place where the answer has to be read and reasoned out of a document, as with the financial reports. Where requests fall into a fixed set of types, try a classifier first and keep the rule check.</p></div>
-<h3 style="margin-top:28px">Limits of these results</h3>
+<!--/ML--><!--PUB--><div class="call"><p><b>What this means.</b> Clever prompting and add-on tools were not what moved the numbers on financial reports. Checking answers against each other, training on the task, and escalating the doubtful cases did.</p></div><!--/PUB--><h3 style="margin-top:28px">Limits of these results</h3>
 <ul class="plain">
 <li>On financial reports about half the questions still go to the large model, and the benchmark supplies the right page. Finding that page in a full report is not tested.</li>
 <li>The payment requests were generated for this study and reworded by a separate model; the financial questions are from a public benchmark.</li>
