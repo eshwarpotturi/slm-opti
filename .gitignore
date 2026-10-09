@@ -13,3 +13,7 @@ emb_cache*.json
 
 # client-specific question sets stay off the public repo
 fin/private/
+
+# detail pages are now part of index.html; these are build by-products
+tools.html
+fin/index.html

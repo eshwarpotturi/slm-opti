@@ -174,6 +174,34 @@ d = dict(
     ladder=ladder(), wrong=wrong_bars(), dots=dots(), grouped=grouped(),
     t_ag=mini_tiles(GREEN, pct(x, AG)), t_al=mini_tiles(GREY, pct(g)),
     **{"p_" + k: v for k, v in P.items()})
+import html as _h
+import runpy
+E = _h.escape
+FB = runpy.run_path(os.path.join(F, "build_page.py"))          # the financial detail build: example, tables
+TB = runpy.run_path(os.path.join(HERE, "build_page.py"))       # the payment detail build: recorded requests
+ex, i_ = FB["ex"], FB["ex"]["id"]
+fm = FB["fmt"]
+d["ex_table"] = FB["ex_table"]
+d["ex_q"] = E(ex["question"])
+d["ex_rows"] = "".join("<div class='ans'><span>%s</span><b class='%s'>%s</b></div>" % r for r in [
+    ("Correct answer", "", fm(ex["answer"], ex["answer"])), ("Small model alone", "bad", fm(g[i_]["answer"]) + " &#10007;"),
+    ("Fine-tuned small model", "okc", fm(tu[i_]["answer"], ex["answer"]) + " &#10003;"), ("Second small model", "okc", fm(m[i_]["answer"]) + "% &#10003;"),
+    ("They agree, so the answer is used", "okc", "no large model needed")])
+d["fin_steps"] = FB["steps"]
+d["fin_rows"] = "".join(FB["rows"])
+td = TB["data"]
+hero = td["hero"]
+d["pay_q"] = E(hero["q"])
+d["pay_rows"] = "".join("<div class='ans'><span>%s</span><b class='%s'>%s</b></div>" % r for r in [
+    ("Small model alone", "bad", E("; ".join(hero["a"])) + " &#10007;"),
+    ("Rule check", "", E(hero["rej"][0][:140])), ("With the layers", "okc", "stops and asks &#10003;")])
+cats = td["cats"]
+hd = td["head"]
+d["pay_cats"] = "".join("<tr><td>%s</td><td class='n'>%d%%</td><td class='n'>%d%%</td><td class='n'>%d%%</td></tr>" % (c, hd[0]["cats"][k], hd[1]["cats"][k], hd[2]["cats"][k]) for k, c in enumerate(cats))
+okno = lambda v: "ok" if v else "no"
+show = lambda calls: E("; ".join(calls)) if calls else "stops and asks"
+d["pay_all"] = "".join("<tr><td>%s</td><td>%s</td><td class='%s'>%s</td><td class='%s'>%s</td></tr>" % (
+    E(r["q"]), show(r["want"]), okno(r["ap"]), show(r["a"]), okno(r["cp"]), show(r["c"]) + (" (large model)" if r["esc"] else "")) for r in td["rows"])
 page = open(os.path.join(HERE, "site_template.html")).read()
 for k, v in d.items():
     page = page.replace("{{%s}}" % k, str(v))

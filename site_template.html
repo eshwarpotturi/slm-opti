@@ -31,9 +31,16 @@ p{margin:0 0 14px;max-width:68ch}.mute{color:var(--mute)}.small{font-size:.86rem
 .call{border-left:3px solid var(--green);background:var(--tint);padding:16px 20px;margin:22px 0;max-width:70ch}.call p{margin:0}
 .links{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.links a{display:block;border:1px solid var(--line);background:var(--paper);padding:18px;color:var(--ink);text-decoration:none}
 .links a:hover{border-color:var(--green)}.links b{display:block;margin-bottom:4px}.links span{font-size:.86rem;color:var(--mute)}
+.ex{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:start}.ex .q{font:600 1.08rem/1.35 "Iowan Old Style",Palatino,Georgia,serif;margin:0 0 8px}
+.ans{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.93rem}.ans:last-child{border:0}.ans b{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.bad{color:var(--red)}.okc{color:var(--green)}
+table{border-collapse:collapse;width:100%;font-size:.86rem}th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}td.ok{color:var(--green)}td.no{color:var(--red)}
+.scroll{max-height:460px;overflow:auto;border:1px solid var(--line);background:var(--paper);margin-top:12px}.tw{overflow-x:auto}
+details{border-top:1px solid var(--line);padding:14px 0}details.last{border-bottom:1px solid var(--line)}summary{cursor:pointer;font-weight:600}
+ol.layers{margin:0;padding-left:20px;font-size:.95rem}ol.layers li{margin-bottom:8px}ol.layers b{color:var(--green)}
 ul.plain{margin:0 0 14px;padding-left:18px;max-width:68ch}ul.plain li{margin-bottom:6px}
 footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;color:var(--mute)}
-@media (max-width:860px){.hero,.sec,.two,.three,.links{grid-template-columns:1fr}.hero{padding-top:36px;gap:24px}h1{font-size:2.1rem}.three>div{border-right:0;border-bottom:1px solid var(--line)}.sec{gap:8px}body{font-size:16px}}
+@media (max-width:860px){.ex,.hero,.sec,.two,.three,.links{grid-template-columns:1fr}.hero{padding-top:36px;gap:24px}h1{font-size:2.1rem}.three>div{border-right:0;border-bottom:1px solid var(--line)}.sec{gap:8px}body{font-size:16px}}
 </style></head><body>
 <header><div class="w"><span>Small language models · two measured studies</span><nav><a href="#how">How</a><a href="#finance">Financial reports</a><a href="#payments">Payment requests</a><a href="#limits">What did not work</a></nav></div></header>
 
@@ -69,6 +76,10 @@ footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;col
 <p class="small" style="margin:18px 0 6px">Answers the two models agree on: {{pa}} correct</p>{{t_ag}}
 <p class="small" style="margin-top:16px">Fine-tuning took 36 minutes on a free GPU with 1,026 solved questions. Alone it moved the model from {{fin_a}}% to {{pt}}%.</p></div>
 </div>
+<div class="fig"><h4>One real question from the test</h4><p class="cap">The small model alone gets it wrong. The two models in our setup agree on the right answer, so no large model is needed.</p>
+<div class="ex"><div class="tw"><table>{{ex_table}}</table></div><div><p class="q">&ldquo;{{ex_q}}&rdquo;</p>{{ex_rows}}</div></div></div>
+<details><summary>Results by difficulty</summary><div class="tw" style="margin-top:10px"><table><tr><th>Arithmetic steps needed</th><th class="n">Questions</th><th class="n">Small model alone</th><th class="n">Fine-tuned</th><th class="n">Our setup</th><th class="n">Large model</th></tr>{{fin_steps}}</table></div></details>
+<details class="last"><summary>Every question and every answer ({{N}})</summary><div class="scroll"><table><tr><th>Question</th><th class="n">Correct answer</th><th class="n">Fine-tuned Gemma</th><th class="n">Ministral</th><th>Route</th><th class="n">Final</th></tr>{{fin_rows}}</table></div></details>
 </div></div></section>
 
 <section id="payments"><div class="w sec"><div class="tag">Evidence 2<br>Payment requests</div><div>
@@ -80,6 +91,13 @@ footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;col
 <div class="fig"><h4>Wrong money-moving actions</h4><p class="cap">Refunds, cancellations and invoices that should not have happened, out of 150 requests.</p>{{wrong}}</div>
 <div class="fig"><h4>Near the large model at a tenth of the cost</h4><p class="cap">Share of requests correct against cost.</p>{{sc_pay}}</div>
 </div>
+<div class="two">
+<div class="fig"><h4>The five layers</h4><p class="cap">Each is code around the model. None changes the wording of the prompt.</p>
+<ol class="layers"><li><b>Reply check.</b> The reply must be valid and fit the template for the chosen action, with one retry.</li><li><b>Record lookup.</b> Code finds the account records the request refers to. IDs can only come from those.</li><li><b>Split and search.</b> A message with several requests is split, and the model sees only the most relevant actions.</li><li><b>Rule check.</b> Every proposed action is tested against the state of the account, with one chance to correct.</li><li><b>Escalation.</b> When repeated attempts by the small model disagree, a large model takes the request.</li></ol></div>
+<div class="fig"><h4>One real request from the test</h4><p class="cap">The account does not allow what is asked.</p><p class="q" style="font:600 1.05rem/1.35 Georgia,serif;margin:0 0 8px">&ldquo;{{pay_q}}&rdquo;</p>{{pay_rows}}</div>
+</div>
+<details><summary>Results by type of request</summary><div class="tw" style="margin-top:10px"><table><tr><th>Type of request</th><th class="n">Small model alone</th><th class="n">Four layers</th><th class="n">All five</th></tr>{{pay_cats}}</table></div></details>
+<details class="last"><summary>Every request and every answer (150)</summary><div class="scroll"><table><tr><th>Request</th><th>Correct actions</th><th>Small model alone</th><th>Our setup</th></tr>{{pay_all}}</table></div></details>
 </div></div></section>
 
 <section id="limits"><div class="w sec"><div class="tag"><!--ML-->Honest account<!--/ML--><!--PUB-->What did not work<!--/PUB--></div><div>
@@ -93,11 +111,6 @@ footer{border-top:1px solid var(--line);padding:26px 0 60px;font-size:.84rem;col
 <li>The payment requests were generated for this study and reworded by a separate model; the financial questions are from a public benchmark.</li>
 <li>All figures are single runs on unseen test sets of {{N}} and 150 items. The fine-tuned pair's financial result combines recorded answers from separate runs.</li>
 </ul>
-<div class="links">
-<a href="fin/index.html"><b>Financial reports in full</b><span>Every question, every answer, and one worked example.</span></a>
-<a href="tools.html"><b>Payment requests in full</b><span>The five layers step by step, with recorded walkthroughs.</span></a>
-<a href="https://github.com/eshwarpotturi/slm-opti"><b>Code, results and logs</b><span>Everything needed to rerun both studies.</span></a>
-</div>
 </div></div></section>
 
 <footer><div class="w">Models: Gemma 3 4B, Ministral 3B, Llama 3.1 8B (small); Claude Haiku 4.5 and Claude Sonnet 4.5 (large). Financial data: FinQA, Chen et al., 2021, MIT licence. Costs are list prices per 1,000 requests; the fine-tuned model's own running cost is not included.</div></footer>
