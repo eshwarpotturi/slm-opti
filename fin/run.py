@@ -244,8 +244,8 @@ def attempt(model, t, layers, temperature, tuned):
         if not use_calc:
             return read_alone(text), None, cost, notes
         said = None if tuned else read_alone(text)
-        formula = text.strip().splitlines()[0] if (tuned and text.strip()) else read_formula(text)
-        if tuned and formula.lower() in ("yes", "no"):
+        formula = text.strip().splitlines()[0].replace("FORMULA:", "").strip() if (tuned and text.strip()) else read_formula(text)
+        if tuned and formula and formula.lower() in ("yes", "no"):
             return formula.lower(), None, cost, notes
         if said in ("yes", "no"):
             return said, None, cost, notes

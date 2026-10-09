@@ -33,11 +33,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tag", default="t"); ap.add_argument("--tasks", default="data/test.json")
     ap.add_argument("--big", default="bedrock:us.anthropic.claude-haiku-4-5-20251001-v1:0")
+    ap.add_argument("--a", default=A + "__L0", help="result-file stem of the first small model, e.g. gemma-3-4b-tuned__L0")
+    ap.add_argument("--out", default="crosscheck")
     ap.add_argument("--budget", type=float, default=160); ap.add_argument("--workers", type=int, default=6)
     a = ap.parse_args()
     tasks = json.load(open(os.path.join(run.HERE, a.tasks)))
-    ra, rb = load("%s__L0-%s" % (A, a.tag)), load("%s__L0-%s" % (B, a.tag))
-    out = os.path.join(run.HERE, "results", "crosscheck-%s.jsonl" % a.tag)
+    ra, rb = load("%s-%s" % (a.a, a.tag)), load("%s__L0-%s" % (B, a.tag))
+    out = os.path.join(run.HERE, "results", "%s-%s.jsonl" % (a.out, a.tag))
     done = {json.loads(l)["id"] for l in open(out)} if os.path.exists(out) else set()
     lock, t0, errs = threading.Lock(), time.time(), [0]
 
