@@ -11,8 +11,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SECTOR = set("GS PNC C FIS GPN STT CME BLK ETFC AON V MA MS HIG SPGI TROW FITB CB L RE JKHY MKTX".split())
-NAMES = ("jpmorgan", "j.p. morgan", "jp morgan", "paypal")
-HELD = {"JPM"}       # kept out of the public files
+_n = os.path.join(HERE, "private", "names.txt")       # optional: one name per line; questions mentioning any are left out
+NAMES = tuple(l.strip().lower() for l in open(_n) if l.strip()) if os.path.exists(_n) else ()
+HELD = set(os.environ.get("HELD_TICKERS", "").split())       # tickers kept out of the public files
 
 
 SIGN = {"add": "+", "subtract": "-", "multiply": "*", "divide": "/", "exp": "**", "greater": ">"}
