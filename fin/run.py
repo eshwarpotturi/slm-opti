@@ -1,7 +1,7 @@
 """Runs a small model on financial-report questions, alone or with the improvement layers.
 
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 0      the model alone, thinking step by step
-  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1      1 = calculator: the model writes a formula, code does the arithmetic
+  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1      1 = calculator: the model reasons, then writes a formula; code does the arithmetic
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 12     2 = source check: every figure in the formula must be in the report; one retry
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 123    3 = vote: five attempts, the most common result wins
 
@@ -131,12 +131,11 @@ ALONE = ("You are a financial analyst. Read the extract from a company's annual 
          "Work it out step by step, then finish with one line in exactly this form:\nANSWER: <a single number, or yes or no>\n"
          "Do not put units or words on that line. Give a percentage as the percent number, for example 7.52 for 7.52%. Keep at least two decimal places.")
 TOOL = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
-        "Do not do any arithmetic yourself. A calculator will work out your formula.\n"
-        "Reply with JSON only, in this form:\n"
-        '{"figures": [{"what": "<what the figure is, with its year>", "value": <the number exactly as printed in the extract>}], '
-        '"formula": "<arithmetic using only those values, with + - * / and brackets>"}\n'
-        "Rules: copy each figure exactly as the extract prints it. A percentage change is (new - old) / old. "
-        "A share of a total is part / total. For a yes or no question write a comparison such as 286.61 > 198.09.")
+        "First, in a few short lines, say which figures the question needs and where each one is printed (row and year).\n"
+        "Do not do the arithmetic yourself: a calculator will work out your formula.\n"
+        "Finish with one line in exactly this form:\nFORMULA: <arithmetic with + - * / and brackets, using figures copied exactly from the extract>\n"
+        "A percentage change is (new - old) / old. A change is new - old. A share of a total is part / total.\n"
+        "Only if the question asks yes or no, write a comparison such as FORMULA: 286.61 > 198.09")
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
 
 
@@ -154,14 +153,8 @@ def read_alone(text):
 
 
 def read_formula(text):
-    try:
-        d = json.loads(stack.repair_json(text))
-        if isinstance(d, dict) and d.get("formula"):
-            return str(d["formula"])
-    except Exception:
-        pass
-    m = re.search(r'"formula"\s*:\s*"([^"]+)"', text or "")
-    return m.group(1) if m else None
+    m = re.findall(r"FORMULA\s*:\s*\**\s*`?([^\n`]+)", text or "", flags=re.I)
+    return m[-1].strip().strip("*").strip() if m else None
 
 
 # ---------- one question ----------
@@ -171,23 +164,23 @@ def attempt(model, t, layers, temperature, tuned):
     msgs = [{"role": "user", "content": (TUNED if tuned else TOOL) + "\n\n" + ask(t)}]
     answer = formula = None
     for turn in range(2 if "2" in layers else 1):
-        text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=350)
+        text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=500)
         cost += c
         formula = text.strip().splitlines()[0] if (tuned and text.strip()) else read_formula(text)
         problem = None
         if not formula:
-            problem = "Your reply was not the JSON asked for. Reply with the JSON only."
+            problem = "Your reply had no FORMULA line. Finish with one line starting FORMULA:"
         else:
             try:
                 answer = calc(formula)
                 bad = unsupported(formula, doc, t["question"]) if "2" in layers else []
                 if bad:
                     problem = ("These figures in your formula are not printed in the extract: %s. Use only figures copied from the extract, "
-                               "and do no arithmetic in your head. Reply with the corrected JSON." % ", ".join("%g" % b for b in bad))
+                               "and do no arithmetic in your head. Give the corrected FORMULA line." % ", ".join("%g" % b for b in bad))
             except ZeroDivisionError:
-                problem = "Your formula divides by zero. Reply with the corrected JSON."
+                problem = "Your formula divides by zero. Give the corrected FORMULA line."
             except Exception:
-                problem = "The calculator could not read your formula. Use only numbers and + - * / and brackets. Reply with the corrected JSON."
+                problem = "The calculator could not read your formula. Use only numbers and + - * / and brackets, one formula only. Give the corrected FORMULA line."
         if not problem:
             break
         notes.append(problem.split(".")[0])
