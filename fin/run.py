@@ -133,7 +133,7 @@ def unsupported(formula, doc, question):
 ALONE = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
          "Work it out step by step, then finish with one line in exactly this form:\nANSWER: <a single number, or yes or no>\n"
          "Do not put units or words on that line. Give a percentage as the percent number, for example 7.52 for 7.52%. Keep at least two decimal places.")
-TOOL = (ALONE + "\nAfter the ANSWER line add one more line with the arithmetic behind it, numbers and signs only, "
+EXTRA = ("\nAfter the ANSWER line add one more line with the arithmetic behind it, numbers and signs only, "
         "using figures copied exactly from the extract:\nFORMULA: <for example (5829 - 5735) / 5735>\n"
         "A calculator will redo that arithmetic, so the formula must be complete. For a yes or no question leave the FORMULA line out.")
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
@@ -208,10 +208,10 @@ def show_number(x):
     return "%.2f" % (v * 100) if (abs(v) < 2 and "/" in x["formula"]) else "%g" % round(v, 2)
 
 
-def example_text(question):
+def example_text(question, with_formula=True):
     lines = ["Here are similar questions from other reports, already solved. They show how to set the answer out; their figures are not yours."]
     for x in examples(question):
-        last = "ANSWER: %s" % x["answer"] if isinstance(x["answer"], str) else "ANSWER: %s\nFORMULA: %s" % (show_number(x), x["formula"])
+        last = "ANSWER: %s" % x["answer"] if isinstance(x["answer"], str) else ("ANSWER: %s\nFORMULA: %s" % (show_number(x), x["formula"]) if with_formula else "Working: %s\nANSWER: %s" % (x["formula"], show_number(x)))
         lines.append("Q: %s\nFigures: %s\n%s" % (x["question"], " ".join(x["facts"])[:400], last))
     return "\n\n".join(lines)
 
@@ -220,12 +220,15 @@ def example_text(question):
 def attempt(model, t, layers, temperature, tuned):
     """One pass: returns (answer, formula, cost, notes). The calculator's result replaces the model's own arithmetic."""
     doc, cost, notes = render(t), 0.0, []
-    head = TUNED if tuned else TOOL + ("\n\n" + example_text(t["question"]) if "3" in layers else "")
+    use_calc = tuned or "1" in layers
+    head = TUNED if tuned else ALONE + (EXTRA if use_calc else "") + ("\n\n" + example_text(t["question"], use_calc) if "3" in layers else "")
     msgs = [{"role": "user", "content": head + "\n\n" + ask(t)}]
     answer = formula = None
-    for turn in range(2 if "2" in layers else 1):
+    for turn in range(2 if ("2" in layers and use_calc) else 1):
         text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=600)
         cost += c
+        if not use_calc:
+            return read_alone(text), None, cost, notes
         said = None if tuned else read_alone(text)
         formula = text.strip().splitlines()[0] if (tuned and text.strip()) else read_formula(text)
         if tuned and formula.lower() in ("yes", "no"):
@@ -263,7 +266,7 @@ def attempt(model, t, layers, temperature, tuned):
 
 
 def solve(model, t, layers, tuned=False):
-    if not layers.strip("0"):
+    if not layers.strip("0") and not tuned:
         text, cost, _ = stack.chat(model, [{"role": "user", "content": ALONE + "\n\n" + ask(t)}], temperature=0, max_tokens=500)
         return {"answer": read_alone(text), "cost": cost, "raw": text[-600:]}
     if "4" not in layers:
@@ -274,11 +277,14 @@ def solve(model, t, layers, tuned=False):
         a, f, c, notes = attempt(model, t, layers, 0 if i == 0 else 0.7, tuned)
         cost += c
         tries.append((a, f, notes))
-    keyed = collections.Counter(("%.6g" % a if isinstance(a, float) else a) for a, _, _ in tries if a is not None)
+
+    def key(a):
+        return "%.3g" % a if isinstance(a, float) else a
+    keyed = collections.Counter(key(a) for a, _, _ in tries if a is not None)
     if not keyed:
         return {"answer": None, "cost": cost, "votes": [], "notes": tries[0][2]}
     top = keyed.most_common(1)[0][0]
-    a, f, notes = next(x for x in tries if x[0] is not None and ("%.6g" % x[0] if isinstance(x[0], float) else x[0]) == top)
+    a, f, notes = next(x for x in tries if x[0] is not None and key(x[0]) == top)
     return {"answer": a, "formula": f, "cost": cost, "agree": keyed[top], "votes": list(keyed.items()), "notes": notes}
 
 
