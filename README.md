@@ -20,7 +20,15 @@ All figures are for Gemma 3 4B, 150 requests per test set.
 
 Set A is inflated, because the code was developed against it. Set B exposed a splitter that relied on the joining words used in set A; the splitter was rewritten, and set C tests the rewrite. Sets A and B were not rerun with the final code.
 
-Two other small models on set A, with layers 1 to 4 only: Llama 3.1 8B went from 59% to 85%, and Ministral 3B from 63% to 89%. They have not been run on sets B or C.
+### Every layer on the unseen set C, three small models
+
+| Model | Alone | + 1 | + 2 | + 3 | + 4 | Wrong write actions: alone, then layers 1 to 4 |
+|---|---|---|---|---|---|---|
+| Gemma 3 4B | 55% | 55% | 62% | 65% | 79% | 48, then 3 |
+| Llama 3.1 8B | 45% | 59% | 65% | 71% | 85% | 13, then 3 |
+| Ministral 3B | 60% | 59% | 71% | 68% | 83% | 25, then 3 |
+
+Each cell is a separate run of 150 requests. Repeated runs of the same setup differ by a few requests: Gemma with layers 1 to 4 scored 78% in one run and 79% in another. Layer 5 has been run on Gemma only.
 
 A "wrong write action" is a refund, cancellation, send or similar that the correct answer does not contain.
 

@@ -550,6 +550,7 @@ def solve(model, task, layers, votes=0):
                 info[k] += i[k]
             info["rejections"] += i["rejections"]; info["parsed"] = info["parsed"] and i["parsed"]
             info["raw"] += " || " + i["raw"][:400]
+            info["trace"] += i["trace"]
             if "agree" in i:
                 info["agree"] = min(info.get("agree", votes), i["agree"])
     info["segments"] = len(parts)
@@ -569,6 +570,11 @@ def solve_one(model, acct, request, layers, votes=0, whole=None):
     if "1" in layers:
         schema, tools = build_schema(tools, shown_acct if "2" in layers else None)
     info["tools_shown"] = len(tools)
+    # a step-by-step record of what each layer did, for the results page
+    tr = {"seg": request, "tools": list(tools) if "3" in layers else len(tools),
+          "records": {c: [len(shown_acct[c]), len(acct[c])] for c in COLLECTIONS + ("products",)},
+          "first": [], "rejected": [], "second": None, "final": []}
+    info["trace"] = [tr]
     prompt = (PROMPT.replace(OUT_OLD, OUT_NEW) if "1" in layers else PROMPT)
     prompt = prompt.replace("{tools}", json.dumps([SPECS[n]["raw"] for n in tools], indent=1)) \
                    .replace("{account}", json.dumps(shown_acct, indent=1)).replace("{request}", request)
@@ -604,18 +610,23 @@ def solve_one(model, acct, request, layers, votes=0, whole=None):
     text = ask()
     info["raw"] = text[:1200]
     calls, info["parsed"] = read_calls(text) if "1" in layers else parse_calls(text)
+    tr["first"] = [dict(c) for c in calls]
     calls = tidy(calls)
     bad = problems(calls, info["parsed"])
     if bad:
         info["rejections"] = [w for _, w in bad]
+        tr["rejected"] = [[c, w] for c, w in bad]
         msgs += [{"role": "assistant", "content": text},
                  {"role": "user", "content": "Your reply was rejected:\n" +
                   "\n".join("- %s%s" % (json.dumps(c) + ": " if c else "", w) for c, w in bad) +
                   '\nReply again with the corrected JSON object. If the request cannot be done, reply {"calls": []}.'}]
         text2 = ask()
         calls2, parsed2 = read_calls(text2)
+        tr["second"] = [dict(c) for c in calls2]
         calls2 = tidy(calls2)
-        still = {id(c) for c, _ in problems(calls2, True) if c is not None}
+        again = problems(calls2, True)
+        tr["rejected2"] = [[c, w] for c, w in again if c is not None]
+        still = {id(c) for c, _ in again if c is not None}
         calls = [c for c in calls2 if id(c) not in still]            # anything still invalid is not executed
         info["raw2"] = text2[:600]
     if votes:
@@ -630,6 +641,7 @@ def solve_one(model, acct, request, layers, votes=0, whole=None):
             other = [c for c in other if id(c) not in still]
             agree += canon(other) == canon(calls)
         info["agree"] = agree
+    tr["final"] = calls
     return calls, info
 
 

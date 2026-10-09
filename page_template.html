@@ -100,6 +100,22 @@ summary:hover{background:#fafbfc}
 .detail .why{font-size:.86rem;color:var(--ink-2);margin-top:6px}
 .count{color:var(--ink-3);font-size:.9rem;margin-left:auto}
 
+.walk{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+.walk .wq{font:500 1.2rem/1.35 var(--display);margin-bottom:6px}
+.stepline{display:grid;grid-template-columns:150px 1fr;gap:6px 18px;padding:13px 0;border-top:1px solid var(--rule)}
+.stepline[hidden]{display:none}
+.stepline .who{font-weight:600;font-size:.9rem}
+.stepline .who small{display:block;font-weight:400;color:var(--ink-3)}
+.stepline .what{font-size:.95rem;color:var(--ink-2)}
+.stepline .what .call{color:var(--ink)}
+.tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.tools span{font:400 .78rem var(--mono);background:var(--paper);border-radius:4px;padding:2px 7px}
+.rejline{margin-top:5px;color:var(--bad);font-weight:500}
+.okline{margin-top:5px;color:var(--good);font-weight:500}
+.walk-nav{display:flex;gap:8px;align-items:center;margin-top:14px}
+.walk-nav button{font:600 .92rem var(--body);border-radius:6px;padding:8px 16px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:#fff}
+.walk-nav button.ghost{background:var(--surface);color:var(--ink);border-color:var(--rule)}
+.walk-nav button:disabled{opacity:.4;cursor:default}
 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:18px}
 .three div{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
 .three b{display:block;font:700 1.7rem var(--display)}
@@ -115,6 +131,7 @@ footer{padding:32px 0 56px;border-top:1px solid var(--rule);color:var(--ink-3);f
   ol.layers .stops{grid-column:2}
   .detail{grid-template-columns:1fr 1fr}
   .bar-row{grid-template-columns:104px 1fr 48px}
+  .stepline{grid-template-columns:1fr}
   summary{grid-template-columns:1fr}
   th,td{padding:8px 8px;font-size:.86rem}
 }
@@ -147,6 +164,7 @@ footer{padding:32px 0 56px;border-top:1px solid var(--rule);color:var(--ink-3);f
   <table id="cat-table" aria-label="Correct answers by type of request">
     <thead><tr><th>Type of request</th><th>Model alone</th><th>Layers 1 to 4</th><th>All five layers</th></tr></thead><tbody></tbody>
   </table>
+  <p class="note">Each column is a separate run. Repeated runs of the same setup differ by a few requests, which is why a row can dip between columns.</p>
 </section>
 
 <section class="wrap" id="how">
@@ -162,11 +180,21 @@ footer{padding:32px 0 56px;border-top:1px solid var(--rule);color:var(--ink-3);f
 
   <div class="devwrap">
     <h3>What each layer added, on three small models</h3>
-    <div class="note">Share of 150 requests handled correctly, layers 1 to 4. These are the development requests the code was built against, so the levels run high; the shape is the point.</div>
+    <div class="note">Share of the 150 unseen requests handled correctly, layers 1 to 4. Hover a point for the count of wrong actions.</div>
     <div class="legend" id="dev-legend"></div>
     <div id="dev-chart"></div>
-    <p class="note" style="margin-bottom:0">Making replies readable (layers 1 to 3) can make a model act more often, wrongly too. On Llama 3.1 8B, wrong actions rose from <span id="ll-0"></span> to <span id="ll-1"></span> after layer 1, and fell to <span id="ll-4"></span> once the rule check was added.</p>
+    <table id="lad-table" aria-label="Three small models on the unseen requests">
+      <thead><tr><th>Model</th><th>Right, alone</th><th>Right, layers 1 to 4</th><th>Wrong actions, alone</th><th>Wrong actions, layers 1 to 4</th></tr></thead><tbody></tbody>
+    </table>
+    <p class="note" style="margin-bottom:0">Accuracy rises layer by layer, but safety arrives with layer 4. Before the rule check, a model whose replies have become readable simply acts more often: Llama 3.1 8B went from <span id="ll-0"></span> wrong actions alone to <span id="ll-1"></span> after layer 1.</p>
   </div>
+</section>
+
+<section class="wrap" id="walk">
+  <h2>Follow one request through the layers</h2>
+  <p class="narrow">These are recorded runs, not a simulation. Choose a request, then step through what each layer did.</p>
+  <div class="filters" id="walk-pick"></div>
+  <div class="walk" id="walk-box"></div>
 </section>
 
 <section class="wrap" id="explore">
@@ -244,9 +272,10 @@ D.cats.forEach((name, i) => { const tr = el("tr"); tr.append(el("td", "", name))
 $("#esc-n").textContent = C.esc;
 $("#c-four").textContent = "$" + B.cost.toFixed(3); $("#c-five").textContent = "$" + C.cost.toFixed(2);
 $("#c-share").textContent = Math.round(100 * (C.n - C.esc) / C.n) + "%";
-const ll = D.dev.find(d => d.name.startsWith("Llama")); $("#ll-0").textContent = ll.wrong[0]; $("#ll-1").textContent = ll.wrong[1]; $("#ll-4").textContent = ll.wrong[4];
+const ll = D.lad.find(d => d.name.startsWith("Llama")); $("#ll-0").textContent = ll.wrong[0]; $("#ll-1").textContent = ll.wrong[1];
+D.lad.forEach(d => { const tr = el("tr"); tr.append(el("td", "", d.name), el("td", "num", d.right[0] + "%"), el("td", "num", d.right[4] + "%"), el("td", "num", d.wrong[0]), el("td", "num", d.wrong[4])); $("#lad-table tbody").append(tr); });
 
-// development-set lines
+// layer by layer, unseen test
 (function () {
   const W = 760, H = 300, m = { l: 40, r: 132, t: 16, b: 34 }, cols = ["var(--s1)", "var(--s2)", "var(--s3)"], xs = ["Alone", "+ layer 1", "+ layer 2", "+ layer 3", "+ layer 4"];
   const x = i => m.l + i * (W - m.l - m.r) / 4, y = v => m.t + (100 - v) * (H - m.t - m.b) / 60;
@@ -254,9 +283,9 @@ const ll = D.dev.find(d => d.name.startsWith("Llama")); $("#ll-0").textContent =
   const svg = mk("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Line chart: share of requests handled correctly as each layer is added, for three small models" });
   [40, 60, 80, 100].forEach(v => { svg.append(mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "var(--rule)", "stroke-width": 1 })); const t = mk("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }); t.textContent = v + "%"; svg.append(t); });
   xs.forEach((s, i) => { const t = mk("text", { x: x(i), y: H - 10, "text-anchor": "middle" }); t.textContent = s; svg.append(t); });
-  const ends = D.dev.map((d, k) => ({ k, v: d.right[4] })).sort((a, b) => b.v - a.v); let last = -99;
+  const ends = D.lad.map((d, k) => ({ k, v: d.right[4] })).sort((a, b) => b.v - a.v); let last = -99;
   const ly = {}; ends.forEach(e => { let yy = y(e.v) + 4; if (yy - last < 15) yy = last + 15; ly[e.k] = yy; last = yy; });
-  D.dev.forEach((d, k) => {
+  D.lad.forEach((d, k) => {
     svg.append(mk("polyline", { points: d.right.map((v, i) => x(i) + "," + y(v)).join(" "), fill: "none", stroke: cols[k], "stroke-width": 2, "stroke-linejoin": "round" }));
     d.right.forEach((v, i) => { const c = mk("circle", { cx: x(i), cy: y(v), r: 4.5, fill: cols[k], stroke: "var(--surface)", "stroke-width": 2 }); svg.append(c);
       const hit = mk("circle", { cx: x(i), cy: y(v), r: 13, fill: "transparent" }); hover(hit, d.name + ", " + xs[i].replace("+ ", "with ") + ": " + v + "% right, " + d.wrong[i] + " wrong actions"); svg.append(hit); });
@@ -264,6 +293,38 @@ const ll = D.dev.find(d => d.name.startsWith("Llama")); $("#ll-0").textContent =
     const li = el("span"); const sw = el("i"); sw.style.background = cols[k]; li.append(sw, d.name); $("#dev-legend").append(li);
   });
   $("#dev-chart").append(svg);
+})();
+
+// walkthrough
+(function () {
+  const pickBox = $("#walk-pick"), box = $("#walk-box"); let shown = 0, lines = [];
+  const R = Object.fromEntries(D.rows.map(r => [r.id, r]));
+  function line(who, sub, build) { const l = el("div", "stepline"), w = el("div", "who", who); if (sub) w.append(el("small", "", sub)); const what = el("div", "what"); build(what); l.append(w, what); return l; }
+  function load(w) {
+    const r = R[w.id]; box.textContent = ""; lines = []; shown = 1;
+    box.append(el("div", "wq", "“" + r.q + "”"));
+    lines.push(line("The model alone", null, d => { calls(r.a, d); d.append(el("div", r.ap ? "okline" : "rejline", r.ap ? "✓ Correct" : "✕ Wrong")); }));
+    if (w.steps.length > 1) lines.push(line("Layer 3 splits it", null, d => { d.append("The message holds " + w.steps.length + " separate requests:"); w.steps.forEach(s => d.append(el("span", "call none", s.seg))); }));
+    w.steps.forEach((s, i) => {
+      const part = w.steps.length > 1 ? "Request " + (i + 1) : null;
+      lines.push(line("Layer 2 hides records", part, d => d.append(s.kept ? "The model sees " + s.kept + " of the account's " + s.total + " records: only the ones this request names." : "Nothing on the account matches this request, so the model is shown none of its " + s.total + " records.")));
+      lines.push(line("Layer 3 picks tools", part, d => { if (!s.tools.length) { d.append("With no matching record, no tool that needs one is offered. No action is possible."); return; } d.append("The model is offered " + s.tools.length + " of 23 tools:"); const t = el("div", "tools"); s.tools.forEach(x => t.append(el("span", "", x))); d.append(t); }));
+      if (!s.tools.length) return;
+      lines.push(line("The model proposes", part, d => calls(s.first, d)));
+      lines.push(line("Layers 1 and 4 check it", part, d => { if (!s.rej.length) { d.append(el("div", "okline", "✓ Format valid, every rule passed.")); return; } s.rej.forEach(([c, why]) => d.append(el("div", "rejline", "✕ Rejected: " + why + "."))); d.append("The reason goes back to the model for one more try."); }));
+      if (s.second) lines.push(line("The model tries again", part, d => { calls(s.second, d); if (s.rej2.length) s.rej2.forEach(([c, why]) => d.append(el("div", "rejline", "✕ Still rejected: " + why + ". The action is dropped."))); else if (s.second.length) d.append(el("div", "okline", "✓ Passes the checks.")); }));
+    });
+    lines.push(line("After layers 1 to 4", null, d => { calls(r.b, d); d.append(el("div", r.bp ? "okline" : "rejline", r.bp ? "✓ Correct" : "✕ Not the expected answer")); }));
+    lines.push(line("Layer 5 decides", null, d => { if (r.esc) { d.append("The small model was unsure" + (w.agree != null && w.agree < 2 ? " (its three answers disagreed)" : " (a rule had fired)") + ", so a large model took the request:"); calls(r.c, d); } else d.append("The small model's three answers agreed and no rule fired, so its answer stands."); d.append(el("div", r.cp ? "okline" : "rejline", r.cp ? "✓ Final answer correct" : "✕ Final answer wrong")); }));
+    lines.forEach((l, i) => { l.hidden = i >= shown; box.append(l); });
+    const nav = el("div", "walk-nav"), next = el("button", "", "Next step"), all = el("button", "ghost", "Show all steps"), cnt = el("span", "note");
+    next.type = all.type = "button";
+    const upd = () => { lines.forEach((l, i) => l.hidden = i >= shown); cnt.textContent = "Step " + shown + " of " + lines.length; next.disabled = shown >= lines.length; };
+    next.onclick = () => { shown++; upd(); }; all.onclick = () => { shown = lines.length; upd(); };
+    nav.append(next, all, cnt); box.append(nav); upd();
+  }
+  D.walks.forEach((w, i) => { const b = el("button", "", w.label); b.type = "button"; b.setAttribute("aria-pressed", i === 0); b.onclick = () => { [...pickBox.children].forEach(x => x.setAttribute("aria-pressed", x === b)); load(w); }; pickBox.append(b); });
+  if (D.walks.length) load(D.walks[0]);
 })();
 
 // explorer

@@ -56,19 +56,19 @@ def summary(tasks, runs):
 
 G = "bedrock-google.gemma-3-4b-it"
 tasks = json.load(open(os.path.join(HERE, "tasks_third.json")))
-alone, four, five = load(G + "__L0-t"), load(G + "__L1234-t"), load(G + "__L12345-t")
+alone, four, five = load(G + "__L0-t"), load(G + "__L1234-u"), load(G + "__L12345-t")
 head = summary(tasks, [alone, four, five])
 
-dev_tasks = json.load(open(os.path.join(HERE, "tasks.json")))
-dev = []
+# every layer on the unseen test, three small models
+lad = []
 for label, stem in [("Gemma 3 4B", G), ("Llama 3.1 8B", "bedrock-us.meta.llama3-1-8b-instruct-v1-0"),
                     ("Ministral 3B", "bedrock-mistral.ministral-3-3b-instruct")]:
     pts, wr = [], []
     for L in ["0", "1", "12", "123", "1234"]:
-        rs = load("%s__L%s-b" % (stem, L))
-        pts.append(round(100.0 * sum(rs[t["id"]]["pass"] for t in dev_tasks) / len(dev_tasks)))
-        wr.append(sum(wrong_write(rs[t["id"]], t) for t in dev_tasks))
-    dev.append({"name": label, "right": pts, "wrong": wr})
+        rs = alone if (stem == G and L == "0") else load("%s__L%s-u" % (stem, L))
+        pts.append(round(100.0 * sum(rs[t["id"]]["pass"] for t in tasks) / len(tasks)))
+        wr.append(sum(wrong_write(rs[t["id"]], t) for t in tasks))
+    lad.append({"name": label, "right": pts, "wrong": wr})
 
 rows = []
 for t in tasks:
@@ -79,12 +79,53 @@ for t in tasks:
                  "b": show(b["calls"]), "bp": b["pass"], "rej": list(dict.fromkeys(c.get("rejections") or b.get("rejections") or []))[:2],
                  "c": show(c["calls"]), "cp": c["pass"], "esc": bool(c.get("escalated"))})
 
+
+
+def steps(tid):
+    """What each layer did for one request, from the recorded run."""
+    out = []
+    for tr in four[tid]["trace"]:
+        kept = sum(v[0] for v in tr["records"].values()); total = sum(v[1] for v in tr["records"].values())
+        out.append({"seg": tr["seg"], "kept": kept, "total": total,
+                    "tools": tr["tools"] if isinstance(tr["tools"], list) else [],
+                    "first": show(tr["first"]),
+                    "rej": [[(show([c])[0] if c else ""), w] for c, w in tr["rejected"]],
+                    "second": None if tr["second"] is None else show(tr["second"]),
+                    "rej2": [[show([c])[0], w] for c, w in tr.get("rejected2", [])],
+                    "final": show(tr["final"])})
+    return out
+
+
+used, walks = set(), []
+
+
+def pick(label, test):
+    r = next((r for r in rows if r["id"] not in used and test(r)), None)
+    if r:
+        used.add(r["id"])
+        walks.append({"label": label, "id": r["id"], "steps": steps(r["id"]), "agree": five[r["id"]].get("agree")})
+
+
+def tr_of(r):
+    return four[r["id"]]["trace"]
+
+
+pick("A refund on an order already refunded", lambda r: r["cat"] == 4 and r["aw"] and r["cp"] and any("REFUNDED" in w for t in tr_of(r) for _, w in t["rejected"]))
+pick("Two requests in one message", lambda r: r["cat"] == 3 and not r["ap"] and r["bp"] and len(tr_of(r)) == 2)
+pick("A wrong first answer, corrected", lambda r: r["bp"] and r["b"] and any(t["rejected"] and t["final"] for t in tr_of(r)))
+pick("A customer who is not on the account", lambda r: r["why"].startswith("customer is not") and r["aw"] and r["bp"])
+pick("An invented detail", lambda r: r["cat"] == 4 and r["bp"] and any("did not" in w for t in tr_of(r) for _, w in t["rejected"]))
+pick("Handed to the large model", lambda r: r["esc"] and r["cp"] and not r["bp"])
+pick("One the layers still get wrong", lambda r: not r["cp"] and not r["esc"] and r["b"])
+
 # the opening example: the model alone would have moved money wrongly, the layers stopped it
 cands = [r for r in rows if r["cat"] == 4 and r["aw"] and r["cp"] and not r["c"] and r["rej"] and r["a"] and "refund" in r["a"][0]]
 hero = next((r for r in cands if "REFUNDED" in r["rej"][0]), cands[0])
 
-data = {"head": head, "cats": [n for _, n in CATS], "dev": dev, "rows": rows, "hero": hero}
+data = {"head": head, "cats": [n for _, n in CATS], "lad": lad, "rows": rows, "hero": hero, "walks": walks}
 html = open(os.path.join(HERE, "page_template.html")).read().replace("/*DATA*/", json.dumps(data, separators=(",", ":")).replace("</", "<\\/"))
 open(os.path.join(HERE, "index.html"), "w").write(html)
 print("index.html written:", len(html) // 1024, "KB |", head)
+print("walkthroughs:", [(w["label"], w["id"], len(w["steps"])) for w in walks])
+print("ladder:", lad)
 print("hero:", hero["q"], "|", hero["a"], "|", hero["rej"])
