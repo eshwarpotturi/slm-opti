@@ -122,6 +122,9 @@ def embed(texts):
     with _emb_lock:
         if _emb is None:
             _emb = json.load(open(path)) if os.path.exists(path) else {}
+            pub = os.path.join(HERE, "embeddings_public.json")      # shipped with the repository, so layer 3 runs without a gateway
+            if os.path.exists(pub):
+                _emb.update(json.load(open(pub)))
         need = [t for t in dict.fromkeys(texts) if t not in _emb]
         for i in range(0, len(need), 64):
             if EMBED_BACKEND == "gateway":
@@ -471,7 +474,13 @@ def local_post(path, body, timeout=900):
         return json.loads(r.read().decode())
 
 
+HF_CHAT = None      # set by the fine-tuning notebook: a function (messages, temperature, max_tokens) -> text
+
+
 def chat(model, messages, schema=None, temperature=0, max_tokens=700):
+    if model.startswith("hf:"):          # a model loaded in this Python process, e.g. on a Colab GPU
+        t0 = time.time()
+        return HF_CHAT(messages, temperature, min(max_tokens, 400)), 0.0, time.time() - t0
     if model.startswith("bedrock:"):     # an open model hosted in the organisation's AWS account, reached through the gateway
         mid = model.split(":", 1)[1]
         body = {"messages": [{"role": m["role"], "content": [{"text": m["content"]}]} for m in messages],
@@ -645,7 +654,7 @@ def solve_one(model, acct, request, layers, votes=0, whole=None):
     return calls, info
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("model")
     ap.add_argument("--layers", default="1234")
@@ -657,13 +666,13 @@ def main():
     ap.add_argument("--budget", type=int, default=150)
     ap.add_argument("--tag", default="")
     ap.add_argument("--tasks", default="tasks.json", help="which chore file to run")
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
 
     global EMBED_LOCAL
-    local = a.model.startswith("ollama:")
+    local = a.model.startswith("ollama:") or a.model.startswith("hf:")
     paid = a.model.startswith("or:") or a.big.startswith("or:")
     if local:
-        EMBED_LOCAL = True
+        EMBED_LOCAL = a.model.startswith("ollama:")
         a.workers, a.budget = 1, 10 ** 6
     if paid:
         used = key_usage()

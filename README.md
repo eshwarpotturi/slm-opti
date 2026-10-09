@@ -84,7 +84,15 @@ A large model alone on the same requests has not been measured, so there is no r
 | `score.py` | Parsing and marking |
 | `run_eval.py`, `report.py`, `ladder_report.py` | Baseline runner and score tables |
 | `build_page.py`, `page_template.html`, `index.html` | The results page, built from `results/` |
+| `finetune.ipynb`, `make_train.py`, `train_tasks.json` | Fine-tuning notebook and its training data |
+| `embeddings_public.json` | Stored embeddings for set C, so layer 3 runs without a gateway |
 | `results/` | Every model reply and its mark |
+
+## Fine-tuning (in progress)
+
+`finetune.ipynb` trains Gemma 3 4B with LoRA on 800 generated requests and tests it on set C, alone and with the layers. It runs on a free Colab T4 GPU and needs no account or key: [open it in Colab](https://colab.research.google.com/github/eshwarpotturi/slm-opti/blob/main/finetune.ipynb).
+
+`make_train.py` builds the training data (`train_tasks.json`): 1,050 requests on accounts from seeds used in no test set, so no customer, ID or amount is shared. Over half are reworded in four styles by Gemini 2.5 Flash-Lite; the tests were reworded by a different model in one casual style. No results yet.
 
 ## Running it
 
