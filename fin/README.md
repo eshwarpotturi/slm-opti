@@ -11,6 +11,8 @@
 | Gemma 3 4B alone | 54% | $0.06 |
 | Ministral 3B alone | 63% | $0.05 |
 | Both small models cross-checked; a larger model answers where they differ | 78% | $1.16 |
+| Gemma 3 4B fine-tuned, alone | 59% | not priced |
+| Fine-tuned Gemma and Ministral cross-checked; larger model where they differ | 80% | $1.14 plus running the tuned model |
 | Larger model alone (Claude Haiku 4.5) | 80% | $2.01 |
 
 The two small models gave the same answer on 145 of 297 questions, and 86% of those answers were correct. The other 152 went to the larger model, which got 71% of them right.
@@ -33,7 +35,12 @@ Most wrong answers come from choosing the wrong figure or misreading the questio
 
 ## Fine-tuning
 
-`finetune_fin.ipynb` trains Gemma 3 4B on about 1,000 solved questions from the training split on a free Colab GPU and tests it on the same 297 questions. Results are added here once it has run.
+`finetune_fin.ipynb` trained Gemma 3 4B for 36 minutes on a free Colab GPU, on 1,026 solved questions from the training split, to write the formula directly. Code then computes the formula and checks its figures against the report.
+
+- Alone: 174 of 297 correct (59%), up from 54% untuned.
+- Cross-checked with Ministral 3B: the two agreed on 144 questions and 133 of those answers (92%) were correct. With the larger model on the other 153, the total is 239 of 297 (80%).
+
+The fine-tuned model writes shares as decimals and the other model writes them as percents, so for this pair two answers count as agreeing when they match after that conversion. The escalated answers are taken from the larger model's recorded run on the same questions.
 
 ## Limits
 

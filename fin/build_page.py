@@ -29,6 +29,8 @@ if os.path.exists(os.path.join(HERE, "results", "gemma-3-4b-tuned__L2-t.jsonl"))
 bars = [("Gemma 3 4B alone", pct(g), per1000(g), "s"), ("Ministral 3B alone", pct(m), per1000(m), "s")]
 if tuned:
     bars.append(("Gemma 3 4B, fine-tuned", pct(tuned), 0, "u"))
+    xt = L("crosscheck-tuned-t")
+    bars.append(("Fine-tuned Gemma and Ministral cross-checked, larger model on disagreements", pct(xt), per1000(xt), "u"))
 bars += [("Both small models, cross-checked, larger model on disagreements", pct(x), per1000(x), "u"),
          ("Larger model alone (Claude Haiku 4.5)", pct(h), per1000(h), "b")]
 
@@ -72,7 +74,7 @@ table{border-collapse:collapse;width:100%%;font-family:system-ui,sans-serif;font
 .flow div{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:12px}.flow b{display:block;font-size:1.5rem}
 button{font:inherit;font-family:system-ui,sans-serif;font-size:.85rem;padding:5px 10px;margin:0 6px 8px 0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:3px;cursor:pointer}
 </style></head><body><main>
-<h1>Two small models that check each other reach %(px)d%%, against %(ph)d%% for a larger model at nearly twice the cost</h1>
+<h1>Two small models that check each other match a larger model at a little over half the cost</h1>
 <p class="lead">The task is the kind an analyst does all day: read a page of a company's annual report and work out a figure from it, such as a margin, a growth rate or a share of a total. The test is %(N)d questions from FinQA, a public benchmark written by finance experts, restricted to banks, insurers and payment companies.</p>
 
 <h2>Share of questions answered correctly</h2>
@@ -88,6 +90,7 @@ button{font:inherit;font-family:system-ui,sans-serif;font-size:.85rem;padding:5p
 </div>
 <p style="margin-top:14px">A small model alone is right a little over half the time, and gives no sign of which half. Agreement between two different small models is the sign: when they agree they are right about as often as the larger model is on those same questions (%(ha)d%%).</p>
 
+<h2>Fine-tuning</h2><p>Gemma 3 4B was trained for 36 minutes on a free GPU, on 1,026 solved questions from the benchmark's training split, to write the formula directly. Alone it rose from 54%% to 59%%. Its larger effect is on the cross-check: when the fine-tuned model and the second small model agree, which happens on 144 of 297 questions, 92%% of those answers are correct. The figures in the flow above are for the untuned pair. The cost shown for the fine-tuned pair leaves out the cost of running the fine-tuned model.</p>
 <h2>What did not help</h2>
 <p>Before the test, each of these was tried on Gemma 3 4B with 100 questions from the benchmark's separate development split. None beat the model working alone, so none was carried to the test. With 100 questions, differences of a few points are within chance.</p>
 <div class="wrap"><table><tr><th>Setup</th><th class="n">Correct</th></tr>%(tried)s</table></div>
