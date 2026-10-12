@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{title}}</title>
+<style>
+:root{--bg:#f6f4ee;--paper:#fffdf8;--ink:#191816;--mute:#6c675d;--line:#ddd8cc;--grey:#b3ac9d;--green:#0f6b55;--tint:#e4efe9;--red:#a4452f;--redtint:#f6e6e1;--slate:#3d4f7a;
+--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#121211;--paper:#1b1a18;--ink:#ebe7df;--mute:#a19b8e;--line:#34322d;--grey:#68635a;--green:#58bfa2;--tint:#17261f;--red:#e28a73;--redtint:#2b1a15;--slate:#94a7d6}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+.w{max-width:1060px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2.35rem;margin:10px 0 14px}h2{font-size:1.65rem;margin-bottom:8px}h3{font-size:1.1rem}
+p{margin:0 0 12px;max-width:70ch}.mute{color:var(--mute)}.small{font-size:.86rem;color:var(--mute)}
+.eyebrow{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--green);font-weight:650}
+header.top{padding:44px 0 30px;border-bottom:1px solid var(--line)}
+.lead{font-size:1.12rem;max-width:62ch}
+.glance{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:18px;align-items:baseline}
+.glance b{font:600 2.1rem/1 var(--serif);font-variant-numeric:tabular-nums}.glance span{font-size:.85rem;color:var(--mute);display:block}
+.glance .arrow{color:var(--mute);font-size:1.4rem}
+section{padding:46px 0;border-bottom:1px solid var(--line)}
+.sec-head{margin-bottom:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:0}
+.examples{display:grid;gap:14px}.ex{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start}.ctx td.mono,.ctx td.st{white-space:nowrap}.ex>div{min-width:0}.ctx td.st{font-weight:600}
+.ex .cat{font-size:.78rem;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.ex .q{font:600 1.04rem/1.35 var(--serif);margin:8px 0 10px}
+.ctx{overflow-x:auto;margin:8px 0}.ctx table{font-size:.78rem}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:.8rem}
+td.n,th.n{text-align:right;white-space:nowrap}
+.want{background:var(--tint);border-radius:4px;padding:8px 10px;font-size:.86rem;margin:10px 0}
+.want b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin-bottom:2px}
+code,.mono{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
+button{font:600 .85rem var(--sans);border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:4px;padding:7px 14px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.replay{display:grid;gap:8px;margin-top:12px}
+.run{border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:.85rem;background:var(--bg)}
+.run .who{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:.8rem;margin-bottom:3px}
+.run.ok{border-color:var(--green)}.run.no{border-color:var(--red)}
+.verdict.ok{color:var(--green)}.verdict.no{color:var(--red)}
+.run .line{font-family:var(--mono);font-size:.78rem;white-space:pre-wrap;overflow-wrap:anywhere;min-height:1em}
+.run .note{font-size:.78rem;color:var(--mute);margin-top:3px}
+.ladder{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start}
+.ladder svg{width:100%;height:auto;display:block}
+.ladder svg text{font-family:var(--sans);fill:var(--mute);font-size:13px}
+.ladder svg text.v{font:600 22px var(--serif);fill:var(--ink)}
+ol.steps{margin:0;padding-left:20px}ol.steps li{margin-bottom:12px}ol.steps b{display:block}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.8rem;font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.up{background:var(--tint);color:var(--green)}.pill.down{background:var(--redtint);color:var(--red)}.pill.flat{background:var(--line);color:var(--mute)}
+.rules td:first-child{width:34%}.rules .desc{color:var(--mute);font-size:.85rem}
+details{margin-top:12px}summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;margin-bottom:16px}
+.tile b{display:block;font:600 2rem/1.1 var(--serif)}.tile span{font-size:.84rem;color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.insight{border-left:3px solid var(--green);background:var(--tint);padding:14px 18px;margin:16px 0 0;max-width:75ch}
+.nohelp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.nohelp .card h3{font-family:var(--sans);font-size:.95rem;margin-bottom:4px}.nohelp p{font-size:.88rem;color:var(--mute);margin:0}
+.bar-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.bar-tools input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);flex:1;min-width:180px}
+.tally{display:flex;gap:16px;flex-wrap:wrap;font-size:.86rem}.tally b{font-variant-numeric:tabular-nums}
+.all{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.all th{position:sticky;top:0;background:var(--paper);z-index:1}
+.all tbody tr{cursor:pointer}.all tbody tr:hover{background:var(--bg)}.all tr.sel{background:var(--tint)}
+.all td.res{text-align:center;width:90px;font-weight:700}
+.mark.ok{color:var(--green)}.mark.no{color:var(--red)}
+#detail{margin-top:14px}
+footer{padding:26px 0 60px;font-size:.84rem;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:780px){.ex,.ladder,.two{grid-template-columns:1fr}h1{font-size:1.8rem}.all td.res{width:auto}}
+</style></head><body>
+<header class="top"><div class="w">
+  <div class="eyebrow">{{eyebrow}}</div>
+  <h1>{{h1}}</h1>
+  <p class="lead">{{lead}}</p>
+  <div class="glance" id="glance"></div>
+</div></header>
+
+<section id="examples"><div class="w">
+  <div class="sec-head"><h2>{{ex_h}}</h2><p class="mute">{{ex_p}}</p></div>
+  <div class="examples" id="ex"></div>
+</div></section>
+
+<section id="ladder"><div class="w">
+  <div class="sec-head"><h2>{{ladder_h}}</h2><p class="mute">{{ladder_note}}</p></div>
+  <div class="ladder"><div id="ladder-chart"></div><ol class="steps" id="steps"></ol></div>
+</div></section>
+
+<section id="rules"><div class="w">
+  <div class="sec-head"><h2>{{rules_h}}</h2><p class="mute">{{rules_p}}</p></div>
+  <div class="card" style="overflow-x:auto"><table class="rules" id="rules-top"></table>
+  <details id="rules-more-wrap"><summary id="rules-more-sum"></summary><table class="rules" id="rules-more" style="margin-top:8px"></table></details></div>
+</div></section>
+
+<section id="finetune"><div class="w">
+  <div class="sec-head"><h2>{{ft_h}}</h2></div>
+  <div class="tiles" id="ft-tiles"></div>
+  <div class="two">
+    <div class="card"><h3>Training loss</h3><p class="small">How far the model's answers were from the correct ones during training, every 5 steps. Lower is better. One pass through the examples.</p><div id="loss"></div></div>
+    <div class="card" style="overflow-x:auto"><h3>Where it helped and where it did not</h3><p class="small">Share correct by type, on the unseen test.</p><table id="ft-cats"></table></div>
+  </div>
+  <div class="insight" id="ft-insight"></div>
+</div></section>
+
+<section id="dropped"><div class="w">
+  <div class="sec-head"><h2>{{nohelp_h}}</h2></div>
+  <div class="nohelp" id="nohelp"></div>
+</div></section>
+
+<section id="all"><div class="w">
+  <div class="sec-head"><h2>{{all_h}}</h2><p class="mute">{{all_p}}</p></div>
+  <div class="bar-tools"><button id="runall">Run all</button><button class="ghost" id="reset">Clear</button><input id="search" type="search" placeholder="Search"><div class="tally" id="tally"></div></div>
+  <div class="all"><table><thead id="all-head"></thead><tbody id="all-body"></tbody></table></div>
+  <div id="detail"></div>
+</div></section>
+
+<footer><div class="w">{{limits}} Every answer on this page was recorded when the test was run; the page replays it.</div></footer>
+
+<script>
+const COPY = /*COPY*/;
+const D = /*DATA*/;
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const BY = Object.fromEntries(D.items.map((x) => [x.id, x]));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
+
+// at a glance
+(function () {
+  const g = $('#glance');
+  const pts = D.ladder.filter((s) => s.pct != null);
+  pts.forEach((s, i) => {
+    if (i) g.appendChild(el('div', 'arrow', '→'));
+    const d = el('div'); d.appendChild(el('b', '', s.pct + '%')); d.appendChild(el('span', '', s.name.replace(/^\+ /, 'with ')));
+    if (i === pts.length - 1) d.querySelector('b').style.color = 'var(--green)';
+    g.appendChild(d);
+  });
+})();
+
+// context: account records or report table
+function context(x) {
+  const box = el('div', 'ctx'); const t = el('table');
+  if (D.kind === 'payments') {
+    if (!x.ctx.length) { box.appendChild(el('div', 'small', 'No matching records on the account.')); return box; }
+    const h = el('tr'); ['Customer', 'Item', 'Amount', 'Status', 'Record ID', 'Payment ID'].forEach((c) => h.appendChild(el('th', '', c))); t.appendChild(h);
+    x.ctx.forEach((r) => { const tr = el('tr'); [r.customer, r.what, r.amount, r.status, r.id, r.pay].forEach((c, i) => { const td = el('td', i > 3 ? 'mono' : (i === 3 ? 'st' : ''), c); tr.appendChild(td); }); t.appendChild(tr); });
+  } else {
+    x.table.forEach((row, ri) => { const tr = el('tr'); row.forEach((c, ci) => tr.appendChild(el(ri === 0 ? 'th' : 'td', ci && ri ? 'n' : '', c))); t.appendChild(tr); });
+  }
+  box.appendChild(t); return box;
+}
+
+async function play(x, host) {
+  host.textContent = '';
+  for (const s of D.setups) {
+    const r = x.a[s.key]; if (!r) continue;
+    const box = el('div', 'run'); const who = el('div', 'who'); who.appendChild(el('span', '', s.name)); const v = el('span', 'verdict', '…'); who.appendChild(v); box.appendChild(who);
+    host.appendChild(box);
+    for (const line of r.text) {
+      const ln = el('div', 'line'); box.appendChild(ln);
+      for (let i = 0; i <= line.length; i += 3) { ln.textContent = line.slice(0, i); await sleep(8); }
+      ln.textContent = line;
+    }
+    if (r.note && r.note.length) box.appendChild(el('div', 'note', 'Rule check stopped: ' + r.note.join('; ')));
+    v.textContent = r.ok ? '✓ correct' : (r.bad ? '✗ wrong action' : '✗ wrong'); v.classList.add(r.ok ? 'ok' : 'no'); box.classList.add(r.ok ? 'ok' : 'no');
+    await sleep(250);
+  }
+}
+
+function want(x) {
+  const w = el('div', 'want'); w.appendChild(el('b', '', D.kind === 'payments' ? 'Correct action' : 'Correct answer'));
+  x.want.forEach((l) => w.appendChild(el('div', D.kind === 'payments' ? 'mono' : '', l)));
+  if (D.kind === 'finqa' && x.formula) w.appendChild(el('div', 'small', 'from ' + x.formula));
+  return w;
+}
+
+// examples
+D.examples.forEach((id) => {
+  const x = BY[id]; const c = el('div', 'card ex'); const left = el('div'), right = el('div');
+  left.appendChild(el('div', 'cat', x.cat));
+  if (D.kind === 'finqa' && x.before) left.appendChild(el('p', 'small', '… ' + x.before));
+  left.appendChild(context(x));
+  right.appendChild(el('div', 'q', '“' + x.q + '”'));
+  right.appendChild(want(x));
+  const b = el('button', '', 'Play'); const host = el('div', 'replay'); right.appendChild(b); right.appendChild(host);
+  b.addEventListener('click', async () => { b.disabled = true; await play(x, host); b.disabled = false; b.textContent = 'Play again'; });
+  c.appendChild(left); c.appendChild(right); $('#ex').appendChild(c);
+});
+
+// ladder chart
+(function () {
+  const W = 520, bw = 110, gap = 50, H = D.kind === 'payments' ? 330 : 290, top = 40, base = 250;
+  const y = (p) => base - (base - top) * p / 100;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Score at each step">`;
+  [0, 50, 100].forEach((v) => { s += `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>`; s += `<text x="${W}" y="${y(v) - 4}" text-anchor="end">${v}%</text>`; });
+  let prev = null;
+  D.ladder.forEach((st, i) => {
+    const x = 20 + i * (bw + gap);
+    const p = st.pct == null ? prev : st.pct;
+    const col = i === 0 ? 'var(--grey)' : st.pct == null ? 'var(--line)' : 'var(--green)';
+    s += `<rect x="${x}" y="${y(p)}" width="${bw}" height="${base - y(p)}" rx="3" fill="${col}"/>`;
+    s += `<text class="v" x="${x + bw / 2}" y="${y(p) - 8}" text-anchor="middle">${st.pct == null ? 'no gain' : st.pct + '%'}</text>`;
+    s += `<text x="${x + bw / 2}" y="${base + 20}" text-anchor="middle">${st.name}</text>`;
+    if (st.wrong != null) s += `<text x="${x + bw / 2}" y="${base + 44}" text-anchor="middle" style="fill:${st.wrong > 10 ? 'var(--red)' : 'var(--green)'};font-weight:600">${st.wrong} wrong actions</text>`;
+    if (i && st.pct != null && prev != null) s += `<text x="${x - gap / 2}" y="${y(Math.max(p, prev)) - 30}" text-anchor="middle" style="fill:var(--green);font-weight:650">+${st.pct - prev}</text>`;
+    prev = p;
+  });
+  $('#ladder-chart').innerHTML = s + '</svg>';
+  COPY.steps.forEach(([h, t]) => { const li = el('li'); li.appendChild(el('b', '', h)); li.appendChild(el('span', '', t)); $('#steps').appendChild(li); });
+})();
+
+// rules
+(function () {
+  const pill = (v, unit) => { if (v == null) return el('span', 'small', ''); const c = v > 0 ? 'up' : v < 0 ? 'down' : 'flat'; return el('span', 'pill ' + c, (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v) + unit); };
+  const head = (t) => { const tr = el('tr'); ['Rule', 'What it does', D.kind === 'payments' ? 'Correct answers' : 'Change', D.kind === 'payments' ? 'Wrong actions avoided' : ''].forEach((c, i) => { if (c !== '' || i < 3) tr.appendChild(el('th', i > 1 ? 'n' : '', c)); }); t.appendChild(tr); };
+  const row = (t, r) => {
+    const tr = el('tr'); tr.appendChild(el('td', '', r.name)); tr.appendChild(el('td', 'desc', r.desc));
+    const a = el('td', 'n'); a.appendChild(pill(r.pts, ' pts')); tr.appendChild(a);
+    if (D.kind === 'payments') { const b = el('td', 'n'); b.appendChild(pill(r.wrong, '')); tr.appendChild(b); }
+    t.appendChild(tr);
+  };
+  const kept = D.rules.filter((r) => r.kind === 'kept').sort((a, b) => b.pts - a.pts || b.wrong - a.wrong);
+  const tried = D.rules.filter((r) => r.kind === 'tried').sort((a, b) => a.pts - b.pts);
+  const topT = $('#rules-top'), more = $('#rules-more'); head(topT); head(more);
+  let top, rest;
+  if (D.kind === 'payments') { top = kept.slice(0, 3).concat(tried.slice(0, 2)); rest = kept.slice(3).concat(tried.slice(2)); }
+  else { top = tried.slice(0, 3); rest = tried.slice(3); }
+  top.forEach((r) => row(topT, r)); rest.forEach((r) => row(more, r));
+  $('#rules-more-sum').textContent = `All ${D.rules.length} rules`;
+  if (!rest.length) $('#rules-more-wrap').hidden = true;
+})();
+
+// fine-tuning
+(function () {
+  const ft = D.ft;
+  [['₹0', 'GPU cost (free cloud GPU)'], [ft.minutes + ' min', 'training time'], [ft.examples.toLocaleString('en-IN'), 'training examples'], ['1', 'pass through the data']].forEach(([b, s]) => {
+    const t = el('div', 'card tile'); t.appendChild(el('b', '', b)); t.appendChild(el('span', '', s)); $('#ft-tiles').appendChild(t);
+  });
+  const W = 460, H = 210, l = 40, r = 10, top = 10, bot = 180;
+  const xs = ft.loss.map((p) => p[0]), ys = ft.loss.map((p) => p[1]);
+  const xmax = Math.max(...xs), ymax = Math.max(...ys);
+  const X = (v) => l + (W - l - r) * v / xmax, Y = (v) => bot - (bot - top) * v / ymax;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Training loss by step" style="width:100%;height:auto">`;
+  [0, ymax / 2, ymax].forEach((v) => { s += `<line x1="${l}" x2="${W - r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${l - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--mute)">${v.toFixed(v < 1 ? 2 : 1)}</text>`; });
+  s += `<text x="${W - r}" y="${H - 6}" text-anchor="end" font-size="11" fill="var(--mute)">training step ${xmax}</text><text x="${l}" y="${H - 6}" font-size="11" fill="var(--mute)">step 0</text>`;
+  s += `<path d="${ft.loss.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="var(--green)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  $('#loss').innerHTML = s + '</svg>';
+  const t = $('#ft-cats'); const h = el('tr'); COPY.ft_cols.forEach((c, i) => h.appendChild(el('th', i ? 'n' : '', c))); t.appendChild(h);
+  ft.cats.forEach((c) => {
+    const tr = el('tr'); tr.appendChild(el('td', '', c.label)); tr.appendChild(el('td', 'n', c.n));
+    tr.appendChild(el('td', 'n', c.base + '%'));
+    const tu = el('td', 'n', c.tuned + '%'); tu.style.color = c.tuned > c.base ? 'var(--green)' : c.tuned < c.base ? 'var(--red)' : ''; tu.style.fontWeight = 650; tr.appendChild(tu);
+    if (c.both != null) tr.appendChild(el('td', 'n', c.both + '%'));
+    t.appendChild(tr);
+  });
+  $('#ft-insight').textContent = COPY.ft_insight;
+})();
+
+// tried and dropped
+COPY.nohelp.forEach(([h, p]) => { const c = el('div', 'card'); c.appendChild(el('h3', '', h)); c.appendChild(el('p', '', p)); $('#nohelp').appendChild(c); });
+
+// every item
+(function () {
+  const head = el('tr'); [COPY.col_q, COPY.col_want].concat(D.setups.map((s) => s.name)).forEach((c, i) => head.appendChild(el('th', i > 1 ? 'n' : '', c))); $('#all-head').appendChild(head);
+  const body = $('#all-body'); const cells = {};
+  D.items.forEach((x) => {
+    const tr = el('tr'); tr.tabIndex = 0; tr.dataset.id = x.id; tr.dataset.text = (x.q + ' ' + x.want.join(' ') + ' ' + x.cat).toLowerCase();
+    const q = el('td'); q.appendChild(el('div', '', x.q)); q.appendChild(el('div', 'small', x.cat)); tr.appendChild(q);
+    tr.appendChild(el('td', D.kind === 'payments' ? 'mono' : 'n', x.want.join('; ')));
+    cells[x.id] = D.setups.map((s) => { const td = el('td', 'res', ''); tr.appendChild(td); return td; });
+    const open = () => { document.querySelectorAll('.all tr.sel').forEach((r) => r.classList.remove('sel')); tr.classList.add('sel'); detail(x); };
+    tr.addEventListener('click', open); tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+    body.appendChild(tr);
+  });
+  const mark = (x) => D.setups.forEach((s, k) => { const r = x.a[s.key]; const td = cells[x.id][k]; td.textContent = r.ok ? '✓' : '✗'; td.className = 'res mark ' + (r.ok ? 'ok' : 'no'); });
+  const tally = (n) => {
+    const t = $('#tally'); t.textContent = '';
+    if (!n) return;
+    D.setups.forEach((s) => { const done = D.items.slice(0, n); const ok = done.filter((x) => x.a[s.key].ok).length; const d = el('span'); d.appendChild(document.createTextNode(s.name + ': ')); d.appendChild(el('b', '', `${ok}/${n} (${Math.round(100 * ok / n)}%)`)); t.appendChild(d); });
+  };
+  function detail(x) {
+    const d = $('#detail'); d.textContent = '';
+    const c = el('div', 'card'); c.appendChild(el('div', 'small', x.cat + ' · ' + x.id));
+    if (D.kind === 'finqa' && x.before) c.appendChild(el('p', 'small', '… ' + x.before));
+    c.appendChild(context(x)); c.appendChild(el('h3', '', '“' + x.q + '”')); c.appendChild(want(x));
+    const host = el('div', 'replay'); c.appendChild(host); d.appendChild(c);
+    c.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'nearest'});
+    play(x, host).then(() => mark(x));
+  }
+  let running = false;
+  $('#runall').addEventListener('click', async () => {
+    if (running) return; running = true; $('#runall').disabled = true;
+    for (let i = 0; i < D.items.length; i++) { mark(D.items[i]); if (i % 3 === 2 || i === D.items.length - 1) { tally(i + 1); await sleep(12); } }
+    running = false; $('#runall').disabled = false;
+  });
+  $('#reset').addEventListener('click', () => { Object.values(cells).flat().forEach((td) => { td.textContent = ''; td.className = 'res'; }); tally(0); $('#detail').textContent = ''; });
+  $('#search').addEventListener('input', (e) => { const q = e.target.value.toLowerCase().trim(); body.querySelectorAll('tr').forEach((tr) => { tr.hidden = q && !tr.dataset.text.includes(q); }); });
+})();
+</script>
+</body></html>
