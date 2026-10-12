@@ -290,12 +290,32 @@ def _ambiguous(acct, coll, rec, request, eligible):
     return not any(t and t in low for t in tells)
 
 
+# Each rule has a name so it can be switched off (RULES_OFF=state,amount) or an extra one tried (RULES_EXTRA=...).
+RULES_OFF = set(filter(None, os.environ.get("RULES_OFF", "").split(",")))
+RULES_EXTRA = set(filter(None, os.environ.get("RULES_EXTRA", "").split(",")))
+ON = lambda name: name not in RULES_OFF
+WRITE_TOOLS = {"create_invoice", "send_invoice", "send_invoice_reminder", "cancel_sent_invoice", "record_payment_for_invoice",
+               "create_refund", "accept_dispute_claim", "create_shipment_tracking", "cancel_subscription", "create_product"}
+ID_KEYS = ("capture_id", "order_id", "invoice_id", "dispute_id", "subscription_id")
+
+
 def guard(call, acct, request):
     """Returns None if the action is allowed, or a short reason why not."""
     t, a = call["tool"], call.get("args") or {}
     spec = SPECS.get(t)
     if not spec:
-        return "there is no tool called %s" % t
+        return "there is no tool called %s" % t if ON("schema") else None
+    if "explicit_id" in RULES_EXTRA and t in WRITE_TOOLS:      # tried: act only when the merchant typed the record's ID
+        ids = [str(a.get(k)) for k in ID_KEYS if a.get(k)]
+        if ids and not any(i.lower() in request.lower() for i in ids):
+            return "the merchant did not type this record's ID, so ask which one"
+    if "strict_lookup" in RULES_EXTRA:                          # tried: look-ups only on records still in progress
+        if t in ("get_shipment_tracking",) and (_find(acct, "orders", "order_id", a.get("order_id")) or {}).get("status") == "REFUNDED":
+            return "this order is REFUNDED, so tracking does not apply"
+        if t == "generate_invoice_qr_code" and (_find(acct, "invoices", "invoice_id", a.get("invoice_id")) or {}).get("status") == "PAID":
+            return "this invoice is PAID, so a QR code does not apply"
+    if not ON("schema"):
+        spec = {"required": [], "props": {k: {} for k in a}}
     for k in spec["required"]:
         if a.get(k) in (None, ""):
             return "%s is required" % k
@@ -310,10 +330,10 @@ def guard(call, acct, request):
     def state(coll, field, k, allowed, word):
         r = _find(acct, coll, field, a.get(k))
         if r is None:
-            return None, "%s %s is not on this account" % (k, a.get(k))
-        if allowed and r["status" if "status" in r else "state"] not in allowed:
+            return None, ("%s %s is not on this account" % (k, a.get(k))) if ON("exists") else None
+        if allowed and ON("state") and r["status" if "status" in r else "state"] not in allowed:
             return r, "this %s is %s, so the action does not apply" % (word, r["status" if "status" in r else "state"])
-        if allowed and _ambiguous(acct, coll, r, request, lambda x: x["status" if "status" in x else "state"] in allowed):
+        if allowed and ON("ambiguous") and _ambiguous(acct, coll, r, request, lambda x: x["status" if "status" in x else "state"] in allowed):
             return r, "%s has more than one %s this could mean; the merchant must say which" % (r["customer"], word)
         return r, None
 
@@ -321,7 +341,9 @@ def guard(call, acct, request):
         o, why = state("orders", "capture_id", "capture_id", {"COMPLETED"}, "order")
         if why:
             return why
-        if a.get("amount_value") not in (None, ""):
+        if o is None:
+            return None
+        if a.get("amount_value") not in (None, "") and ON("amount"):
             amt = _num(a["amount_value"])
             if amt is None or amt <= 0 or amt > o["amount"] + 0.005:
                 return "refund amount must be between 0 and the order amount %s" % o["amount"]
@@ -332,7 +354,7 @@ def guard(call, acct, request):
         v, why = state("invoices", "invoice_id", "invoice_id", allowed, "invoice")
         if why:
             return why
-        if t == "record_payment_for_invoice":
+        if t == "record_payment_for_invoice" and v is not None and ON("amount"):
             amt = _num(a.get("amount_value"))
             if amt is None or amt <= 0 or amt > v["amount"] + 0.005:
                 return "payment amount must be between 0 and the invoice amount %s" % v["amount"]
@@ -350,7 +372,7 @@ def guard(call, acct, request):
         _, why = state("orders", "order_id", "order_id", None, "order")
         if why:
             return why
-        if str(a.get("tracking_number", "")).lower() not in request.lower() or not a.get("tracking_number"):
+        if ON("given") and (str(a.get("tracking_number", "")).lower() not in request.lower() or not a.get("tracking_number")):
             return "the merchant did not give this tracking number"
     elif t in ("get_order", "get_shipment_tracking"):
         _, why = state("orders", "order_id", "order_id", None, "order")
@@ -373,23 +395,23 @@ def guard(call, acct, request):
         if why:
             return why
     elif t == "get_refund":
-        if not a.get("refund_id") or str(a["refund_id"]).lower() not in request.lower():
+        if ON("given") and (not a.get("refund_id") or str(a["refund_id"]).lower() not in request.lower()):
             return "the merchant did not give this refund_id"
     elif t == "create_invoice":
         emails = {r["email"] for c in ("orders", "invoices") for r in acct[c]}
-        if a.get("recipient_email") not in emails:
+        if ON("customer") and a.get("recipient_email") not in emails:
             return "recipient_email is not a customer on this account"
         for k in ("quantity", "unit_amount"):
-            if _num(a.get(k)) not in nums:
+            if ON("amount") and _num(a.get(k)) not in nums:
                 return "the merchant did not state this %s" % k
-    elif t == "list_transactions":
+    elif t == "list_transactions" and ON("dates"):
         for k in ("start_date", "end_date"):
             if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(a.get(k, ""))):
                 return "%s must be YYYY-MM-DD" % k
         if a["start_date"] > a["end_date"] or a["end_date"] > acct["today"]:
             return "dates must be in order and not after today (%s)" % acct["today"]
     elif t == "create_product":
-        if str(a.get("name", "")).strip().lower() not in request.lower() or not a.get("name"):
+        if ON("given") and (str(a.get("name", "")).strip().lower() not in request.lower() or not a.get("name")):
             return "the merchant did not give this product name"
     return None
 
