@@ -145,6 +145,9 @@ EXTRA = ("\nAfter the ANSWER line add one more line with the arithmetic behind i
         "using figures copied exactly from the extract:\nFORMULA: <for example (5829 - 5735) / 5735>\n"
         "A calculator will redo that arithmetic, so the formula must be complete. For a yes or no question leave the FORMULA line out.")
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
+TUNED_FIG = ("Read the extract from a company's annual report. First list the figures the question needs, one per line, "
+             "each with what it is and its year. Then write FORMULA: and the arithmetic that answers the question.")
+VOTES = 5
 
 
 def facts(t):
@@ -282,7 +285,11 @@ def attempt(model, t, layers, temperature, tuned):
         if not use_calc:
             return read_alone(text), None, cost, notes
         said = None if tuned else read_alone(text)
-        formula = text.strip().splitlines()[0].replace("FORMULA:", "").strip() if (tuned and text.strip()) else read_formula(text)
+        if tuned and re.search(r"(FORMULA|ANSWER)\s*:", text or ""):
+            yn = re.findall(r"ANSWER\s*:\s*(yes|no)\b", text, flags=re.I)
+            formula = yn[-1] if yn else read_formula(text)
+        else:
+            formula = text.strip().splitlines()[0].replace("FORMULA:", "").strip() if (tuned and text.strip()) else read_formula(text)
         if tuned and formula and formula.lower() in ("yes", "no"):
             return formula.lower(), None, cost, notes
         if said in ("yes", "no"):
@@ -330,7 +337,7 @@ def solve(model, t, layers, tuned=False):
         a, f, cost, notes = attempt(model, t, layers, 0, tuned)
         return {"answer": a, "formula": f, "cost": cost, "notes": notes}
     tries, cost = [], 0.0
-    for i in range(5):
+    for i in range(VOTES):
         a, f, c, notes = attempt(model, t, layers, 0 if i == 0 else 0.7, tuned)
         cost += c
         tries.append((a, f, notes))
@@ -342,7 +349,8 @@ def solve(model, t, layers, tuned=False):
         return {"answer": None, "cost": cost, "votes": [], "notes": tries[0][2]}
     top = keyed.most_common(1)[0][0]
     a, f, notes = next(x for x in tries if x[0] is not None and key(x[0]) == top)
-    return {"answer": a, "formula": f, "cost": cost, "agree": keyed[top], "votes": list(keyed.items()), "notes": notes}
+    return {"answer": a, "formula": f, "cost": cost, "agree": keyed[top], "votes": list(keyed.items()), "notes": notes,
+            "first": tries[0][0], "first_formula": tries[0][1]}
 
 
 def main(argv=None):
@@ -373,6 +381,8 @@ def main(argv=None):
             print("error", t["id"], repr(e)[:160], flush=True)
             return
         r.update(id=t["id"], gold=t["answer"], right=correct(r["answer"], t["answer"]))
+        if "first" in r:
+            r["first_right"] = correct(r["first"], t["answer"])
         with lock:
             open(out, "a").write(json.dumps(r) + "\n")
 

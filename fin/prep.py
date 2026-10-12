@@ -52,14 +52,15 @@ def slim(x):
             "formula": infix(q["program_re"]), "facts": list(q["gold_inds"].values())}
 
 
-src = sys.argv[1]
-for split in ("train", "dev", "test"):
-    d = json.load(open(os.path.join(src, split + ".json")))
-    pub = [slim(x) for x in d if x["id"].split("/")[0] in SECTOR]
-    pub = [x for x in pub if not any(w in json.dumps(x).lower() for w in NAMES)]
-    json.dump(pub, open(os.path.join(HERE, "data", split + ".json"), "w"))
-    held = [slim(x) for x in d if x["id"].split("/")[0] in HELD]
-    if split == "test":
-        os.makedirs(os.path.join(HERE, "private"), exist_ok=True)
-        json.dump(held, open(os.path.join(HERE, "private", "bank.json"), "w"))
-    print(split, len(pub), "public,", len(held), "held back")
+if __name__ == "__main__":
+    src = sys.argv[1]
+    for split in ("train", "dev", "test"):
+        d = json.load(open(os.path.join(src, split + ".json")))
+        pub = [slim(x) for x in d if x["id"].split("/")[0] in SECTOR]
+        pub = [x for x in pub if not any(w in json.dumps(x).lower() for w in NAMES)]
+        json.dump(pub, open(os.path.join(HERE, "data", split + ".json"), "w"))
+        held = [slim(x) for x in d if x["id"].split("/")[0] in HELD]
+        if split == "test":
+            os.makedirs(os.path.join(HERE, "private"), exist_ok=True)
+            json.dump(held, open(os.path.join(HERE, "private", "bank.json"), "w"))
+        print(split, len(pub), "public,", len(held), "held back")
