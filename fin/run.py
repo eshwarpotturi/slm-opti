@@ -5,6 +5,7 @@
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 12     2 = source check: every figure in the formula must be in the report; one retry
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 123    3 = worked examples: the four most similar solved questions from the training split
   python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 1234   4 = vote: five attempts, the most common result wins
+  python3 fin/run.py bedrock:google.gemma-3-4b-it --layers 126    6 = formula rules (fin/rules.py): checked against the question; one retry
 
 Results go to fin/results/<model>__L<layers>-<tag>.jsonl. Resumable.
 """
@@ -24,6 +25,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 import stack  # noqa: E402  (model access only)
+import rules  # noqa: E402  (layer 6: checks a formula against the question)
 
 stack.PRICES.setdefault("us.anthropic.claude-haiku-4-5-20251001-v1:0", (1.0, 5.0))
 
@@ -238,7 +240,7 @@ def attempt(model, t, layers, temperature, tuned):
     head = TUNED if tuned else ALONE + (EXTRA if use_calc else "") + ("\n\n" + example_text(t["question"], use_calc) if "3" in layers else "")
     msgs = [{"role": "user", "content": head + "\n\n" + ask(t)}]
     answer = formula = None
-    for turn in range(2 if ("2" in layers and use_calc) else 1):
+    for turn in range(2 if (("2" in layers or "6" in layers) and use_calc) else 1):
         text, c, _ = stack.chat(model, msgs, temperature=temperature, max_tokens=600)
         cost += c
         if not use_calc:
@@ -266,6 +268,9 @@ def attempt(model, t, layers, temperature, tuned):
                                % ", ".join("%g" % b for b in bad))
                 else:
                     answer = value
+                    broken = rules.check(t, formula) if "6" in layers else []
+                    if broken:
+                        problem = " ".join(broken) + (" Reply with the corrected formula only" if tuned else " Reply again with the ANSWER and FORMULA lines")
             except ZeroDivisionError:
                 problem = "Your formula divides by zero. Reply again with the ANSWER and FORMULA lines"
             except Exception:
@@ -273,7 +278,7 @@ def attempt(model, t, layers, temperature, tuned):
         if not problem:
             break
         notes.append(problem.split(".")[0].split(":")[0])
-        if tuned:
+        if tuned and "6" not in layers:
             break
         msgs += [{"role": "assistant", "content": text[-1500:]}, {"role": "user", "content": problem + "."}]
     return answer, formula, cost, notes
