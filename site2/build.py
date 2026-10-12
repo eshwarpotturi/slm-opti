@@ -98,13 +98,17 @@ def payments(out_dir):
                       "want": shown(t["expected"]), "why": t.get("why_no_action", ""),
                       "a": {"alone": {"text": shown(alone[i]["calls"]), "ok": alone[i]["pass"], "bad": wrong(alone[i], t)},
                             "rules": {"text": shown(rules[i]["calls"]), "ok": rules[i]["pass"], "bad": wrong(rules[i], t), "note": rej},
+                            "ftonly": {"text": shown(tuned_alone[i]["calls"]), "ok": tuned_alone[i]["pass"], "bad": wrong(tuned_alone[i], t)},
                             "tuned": {"text": shown(tuned[i]["calls"]), "ok": tuned[i]["pass"], "bad": wrong(tuned[i], t)}}})
 
     def pick(test):
         return next(x["id"] for x in items if test(x))
-    ex = [pick(lambda x: x["a"]["alone"]["bad"] and not x["a"]["rules"]["text"][0].startswith("create") and x["a"]["rules"]["ok"] and x["cat"] == cats["5_should_not_act"] and "REFUNDED" in " ".join(x["a"]["rules"]["note"])),
-          pick(lambda x: x["cat"] == cats["4_multi_step"] and not x["a"]["alone"]["ok"] and x["a"]["rules"]["ok"] and x["a"]["tuned"]["ok"] and len(x["want"]) == 2),
-          pick(lambda x: x["cat"] == cats["2_lookup"] and not x["a"]["alone"]["ok"] and x["a"]["tuned"]["ok"] and len(x["ctx"]) <= 3)]
+    sig = lambda x: "".join("1" if x["a"][k]["ok"] else "0" for k in ("alone", "rules", "ftonly", "tuned"))
+    ex = [{"id": pick(lambda x: sig(x) == "0101" and x["a"]["alone"]["bad"] and "REFUNDED" in " ".join(x["a"]["rules"]["note"])),
+           "label": "Rules fixed it, fine-tuning alone did not"},
+          {"id": pick(lambda x: sig(x) == "0011" and x["cat"] == cats["4_multi_step"]),
+           "label": "Fine-tuning fixed it, rules alone did not"},
+          {"id": pick(lambda x: sig(x) == "0001"), "label": "Only the two together got it right"}]
 
     # rules, each switched off on its own (Gemma 3 4B, all four layers otherwise on), recorded in results/*-r-*.jsonl
     R = lambda tag: jl(os.path.join(ROOT, "results", "bedrock-google.gemma-3-4b-it__L1234-r-%s.jsonl" % tag))
@@ -140,7 +144,7 @@ def payments(out_dir):
 
     data = {
         "kind": "payments", "n": len(ids),
-        "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "rules", "name": "With rules in code"}, {"key": "tuned", "name": "Fine-tuned, with rules"}],
+        "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "rules", "name": "Rules only"}, {"key": "ftonly", "name": "Fine-tuning only"}, {"key": "tuned", "name": "Both: final"}],
         "ladder": [{"name": "Small model alone", "pct": pct(alone, ids, "pass"), "wrong": nwrong(alone)},
                    {"name": "Rules only", "pct": pct(rules, ids, "pass"), "wrong": nwrong(rules)},
                    {"name": "Fine-tuning only", "pct": pct(tuned_alone, ids, "pass"), "wrong": nwrong(tuned_alone)},
@@ -155,7 +159,7 @@ def payments(out_dir):
         "h1": "A small model that turns merchant requests into payment actions, made reliable with rules and fine-tuning",
         "lead": "A merchant writes a request in plain words. The model must pick the right action on the account, fill in the right record, and stop when the account does not allow it. Tested on %d requests it had never seen." % len(ids),
         "ex_h": "The task, in three requests",
-        "ex_p": "Each card shows the account records involved, what the merchant wrote, and the correct action. Press Play to replay what each setup did.",
+        "ex_p": "One request the rules fixed, one that fine-tuning fixed, and one that needed both. Each card shows the account records involved, what the merchant wrote and the correct action. Press Play to replay what each setup did.",
         "ladder_h": "What moved the score",
         "ladder_note": "Each bar is a separate setup tested on all %d requests; the last combines the two before it. Share handled exactly right; the line under each bar counts wrong money-moving actions: refunds, cancellations and invoices that should not have happened." % len(ids),
         "steps": [
@@ -226,6 +230,7 @@ def finqa(out_dir):
                  lambda x: x["cat"] == "One step" and not x["a"]["alone"]["ok"] and x["a"]["tuned"]["ok"],
                  lambda x: x["cat"] == "Two steps" and x["a"]["alone"]["ok"] and not x["a"]["tuned"]["ok"]]:
         ex.append(next(x["id"] for x in items if small(x) and x["id"] not in ex and test(x)))
+    ex = [{"id": e, "label": l} for e, l in zip(ex, ["Fine-tuning fixed it: the model's own arithmetic slipped", "Fine-tuning fixed it: the model gave the amount, not the share asked for", "Fine-tuning made it worse"])]
 
     dev = lambda f: round(100.0 * sum(r["right"] for r in jl(os.path.join(F, "results", f + ".jsonl")).values()) / 100)
     base_dev = dev("google.gemma-3-4b-it__L0-d")

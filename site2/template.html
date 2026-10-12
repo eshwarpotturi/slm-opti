@@ -21,7 +21,7 @@ section{padding:46px 0;border-bottom:1px solid var(--line)}
 .sec-head{margin-bottom:18px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:0}
 .examples{display:grid;gap:14px}.ex{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start}.ctx td.mono,.ctx td.st{white-space:nowrap}.ex>div{min-width:0}.ctx td.st{font-weight:600}
-.ex .cat{font-size:.78rem;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.exlabel{font:600 1rem var(--serif);color:var(--green);margin-bottom:4px}.ex .cat{font-size:.78rem;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
 .ex .q{font:600 1.04rem/1.35 var(--serif);margin:8px 0 10px}
 .ctx{overflow-x:auto;margin:8px 0}.ctx table{font-size:.78rem}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -172,8 +172,9 @@ function want(x) {
 }
 
 // examples
-D.examples.forEach((id) => {
-  const x = BY[id]; const c = el('div', 'card ex'); const left = el('div'), right = el('div');
+D.examples.forEach((e) => {
+  const x = BY[e.id]; const c = el('div', 'card ex'); const left = el('div'), right = el('div');
+  const lab = el('div', 'exlabel', e.label); left.appendChild(lab);
   left.appendChild(el('div', 'cat', x.cat));
   if (D.kind === 'finqa' && x.before) left.appendChild(el('p', 'small', '… ' + x.before));
   left.appendChild(context(x));
