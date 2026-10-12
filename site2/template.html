@@ -125,15 +125,12 @@ const BY = Object.fromEntries(D.items.map((x) => [x.id, x]));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
 
-// at a glance
+// at a glance: model alone, then the final approach
 (function () {
-  const g = $('#glance');
-  const pts = D.ladder.filter((s) => s.pct != null);
-  pts.forEach((s, i) => {
-    if (i) g.appendChild(el('div', 'arrow', '→'));
-    const d = el('div'); d.appendChild(el('b', '', s.pct + '%')); d.appendChild(el('span', '', s.name.replace(/^\+ /, 'with ')));
-    if (i === pts.length - 1) d.querySelector('b').style.color = 'var(--green)';
-    g.appendChild(d);
+  const g = $('#glance'); const a = D.ladder[0], f = D.ladder.find((s) => s.final);
+  [[a.pct + '%', 'small model alone'], null, [f.pct + '%', 'final approach: fine-tuned' + (D.kind === 'payments' ? ' + rules' : '')]].forEach((v, i) => {
+    if (!v) { g.appendChild(el('div', 'arrow', '→')); return; }
+    const d = el('div'); const b = el('b', '', v[0]); if (i) b.style.color = 'var(--green)'; d.appendChild(b); d.appendChild(el('span', '', v[1])); g.appendChild(d);
   });
 })();
 
@@ -189,21 +186,21 @@ D.examples.forEach((id) => {
 
 // ladder chart
 (function () {
-  const W = 520, bw = 110, gap = 50, H = D.kind === 'payments' ? 330 : 290, top = 40, base = 250;
+  const n = D.ladder.length, W = 560, gap = n > 3 ? 26 : 50, bw = (W - 56 - gap * (n - 1)) / n, H = D.kind === 'payments' ? 340 : 300, top = 50, base = 250;
   const y = (p) => base - (base - top) * p / 100;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Score at each step">`;
-  [0, 50, 100].forEach((v) => { s += `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>`; s += `<text x="${W}" y="${y(v) - 4}" text-anchor="end">${v}%</text>`; });
-  let prev = null;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Score for each setup">`;
+  [0, 50, 100].forEach((v) => { s += `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>`; s += `<text x="0" y="${y(v) - 4}">${v}%</text>`; });
+  const first = D.ladder[0].pct;
   D.ladder.forEach((st, i) => {
-    const x = 20 + i * (bw + gap);
-    const p = st.pct == null ? prev : st.pct;
-    const col = i === 0 ? 'var(--grey)' : st.pct == null ? 'var(--line)' : 'var(--green)';
+    const x = 44 + i * (bw + gap), cx = x + bw / 2;
+    const p = st.pct == null ? first : st.pct;
+    const col = i === 0 ? 'var(--grey)' : st.pct == null ? 'var(--line)' : st.final ? 'var(--green)' : 'color-mix(in srgb, var(--green) 45%, var(--paper))';
+    if (st.final) s += `<rect x="${x - 6}" y="${y(p) - 54}" width="${bw + 12}" height="${base - y(p) + 60}" rx="6" fill="none" stroke="var(--green)" stroke-dasharray="4 3"/>`;
     s += `<rect x="${x}" y="${y(p)}" width="${bw}" height="${base - y(p)}" rx="3" fill="${col}"/>`;
-    s += `<text class="v" x="${x + bw / 2}" y="${y(p) - 8}" text-anchor="middle">${st.pct == null ? 'no gain' : st.pct + '%'}</text>`;
-    s += `<text x="${x + bw / 2}" y="${base + 20}" text-anchor="middle">${st.name}</text>`;
-    if (st.wrong != null) s += `<text x="${x + bw / 2}" y="${base + 44}" text-anchor="middle" style="fill:${st.wrong > 10 ? 'var(--red)' : 'var(--green)'};font-weight:600">${st.wrong} wrong actions</text>`;
-    if (i && st.pct != null && prev != null) s += `<text x="${x - gap / 2}" y="${y(Math.max(p, prev)) - 30}" text-anchor="middle" style="fill:var(--green);font-weight:650">+${st.pct - prev}</text>`;
-    prev = p;
+    s += `<text class="v" x="${cx}" y="${y(p) - 8}" text-anchor="middle">${st.pct == null ? 'no gain' : st.pct + '%'}</text>`;
+    if (i && st.pct != null) s += `<text x="${cx}" y="${y(p) - 32}" text-anchor="middle" style="fill:var(--green);font-weight:650">+${st.pct - first} vs alone</text>`;
+    s += `<text x="${cx}" y="${base + 20}" text-anchor="middle" style="${st.final ? 'fill:var(--ink);font-weight:700' : ''}">${st.name}</text>`;
+    if (st.wrong != null) s += `<text x="${cx}" y="${base + 42}" text-anchor="middle" style="fill:${st.wrong > 10 ? 'var(--red)' : 'var(--green)'};font-weight:600">${st.wrong} wrong actions</text>`;
   });
   $('#ladder-chart').innerHTML = s + '</svg>';
   COPY.steps.forEach(([h, t]) => { const li = el('li'); li.appendChild(el('b', '', h)); li.appendChild(el('span', '', t)); $('#steps').appendChild(li); });
