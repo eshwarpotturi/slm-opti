@@ -231,7 +231,7 @@ D.examples.forEach((e) => {
 // fine-tuning
 (function () {
   const ft = D.ft;
-  [['₹0', 'GPU cost (free cloud GPU)'], [ft.minutes + ' min', 'training time'], [ft.examples.toLocaleString('en-IN'), 'training examples'], ['1', 'pass through the data']].forEach(([b, s]) => {
+  [['₹0', 'GPU cost (free cloud GPU)'], [ft.minutes + ' min', 'training time'], [ft.examples.toLocaleString('en-IN'), 'training examples'], ['1 pass', D.kind === 'payments' ? 'through the data; the loss had levelled off a third of the way in' : 'through the data; the loss had levelled off a fifth of the way in']].forEach(([b, s]) => {
     const t = el('div', 'card tile'); t.appendChild(el('b', '', b)); t.appendChild(el('span', '', s)); $('#ft-tiles').appendChild(t);
   });
   const W = 460, H = 210, l = 40, r = 10, top = 10, bot = 180;
