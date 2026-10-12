@@ -741,12 +741,12 @@ def main(argv=None):
                     info["model_calls"] += big["model_calls"]; info["big_raw"] = big["raw"][:400]
         except Blocked as e:
             stop.set()
-            print("  the gateway has paused this key for too many errors; stopping.", flush=True)
+            print(time.strftime("%H:%M:%S"), " the gateway has paused this key for too many errors; stopping.", flush=True)
             return
         except Exception as e:
             with lock:
                 errs[0] += 1
-                print("  error on %s: %s" % (t["id"], str(e)[:220]), flush=True)
+                print("%s  error on %s: %s" % (time.strftime("%H:%M:%S"), t["id"], str(e)[:220]), flush=True)
                 if errs[0] >= 3:
                     stop.set()
             return
@@ -757,8 +757,8 @@ def main(argv=None):
             errs[0] = 0; done[t["id"]] = rec
             with open(out, "a") as f:
                 f.write(json.dumps(rec) + "\n")
-            if local:
-                print("  %s %-4s %3d/%d done, %d right so far (%.0fs)" % (t["id"], "ok" if ok else "FAIL", len(done), len(tasks), sum(r["pass"] for r in done.values()), info["secs"]), flush=True)
+            if True:
+                print("%s  %s %-4s %3d/%d done, %d right so far (%.0fs)" % (time.strftime("%H:%M:%S"), t["id"], "ok" if ok else "FAIL", len(done), len(tasks), sum(r["pass"] for r in done.values()), info["secs"]), flush=True)
 
     with cf.ThreadPoolExecutor(a.workers) as ex:
         list(ex.map(work, tasks))

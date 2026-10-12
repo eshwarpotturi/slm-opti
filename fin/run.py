@@ -368,23 +368,29 @@ def main(argv=None):
     out = os.path.join(HERE, "results", "%s__L%s-%s.jsonl" % (re.sub(r"[^A-Za-z0-9.-]+", "-", a.model.split(":", 1)[1]), a.layers, a.tag))
     done = {json.loads(l)["id"] for l in open(out)} if os.path.exists(out) else set()
     todo = [t for t in tasks if t["id"] not in done]
-    lock, t0, errs = threading.Lock(), time.time(), [0]
+    lock, t0, errs, n_done = threading.Lock(), time.time(), [0], [0]
+    print("%s  starting: %d to do, %d already done" % (time.strftime("%H:%M:%S"), len(todo), len(done)), flush=True)
 
     def work(t):
         if time.time() - t0 > a.budget or errs[0] >= 3:
             return
+        t1 = time.time()
         try:
             r = solve(a.model, t, a.layers, a.tuned)
             errs[0] = 0
         except Exception as e:
             errs[0] += 1
-            print("error", t["id"], repr(e)[:160], flush=True)
+            print(time.strftime("%H:%M:%S"), "error", t["id"], repr(e)[:160], flush=True)
             return
         r.update(id=t["id"], gold=t["answer"], right=correct(r["answer"], t["answer"]))
+        r["secs"] = round(time.time() - t1, 1)
         if "first" in r:
             r["first_right"] = correct(r["first"], t["answer"])
         with lock:
             open(out, "a").write(json.dumps(r) + "\n")
+            n_done[0] += 1
+            print("%s  %d/%d  %s  %s  %.0fs" % (time.strftime("%H:%M:%S"), len(done) + n_done[0], len(tasks), t["id"],
+                                                "right" if r["right"] else "wrong", r["secs"]), flush=True)
 
     with cf.ThreadPoolExecutor(a.workers) as ex:
         list(ex.map(work, todo))
