@@ -147,6 +147,12 @@ EXTRA = ("\nAfter the ANSWER line add one more line with the arithmetic behind i
 TUNED = "Read the extract from a company's annual report and write the formula that answers the question."
 TUNED_FIG = ("Read the extract from a company's annual report. First list the figures the question needs, one per line, "
              "each with what it is and its year. Then write FORMULA: and the arithmetic that answers the question.")
+TUNED_DIST = ("Read the extract from a company's annual report and answer the question.\n"
+              "Reply in exactly this shape and nothing else:\n"
+              "Figures:\n- <each figure you need, with what it is and its year, copied exactly from the extract>\n"
+              "Working: <two or three short sentences on how the figures combine to answer the question>\n"
+              "FORMULA: <the arithmetic, using only those figures, with + - * / and brackets>\n"
+              "If the question asks yes or no, end with ANSWER: yes or ANSWER: no instead of FORMULA.")
 VOTES = 5
 
 
