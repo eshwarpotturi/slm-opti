@@ -290,6 +290,15 @@ def _ambiguous(acct, coll, rec, request, eligible):
     return not any(t and t in low for t in tells)
 
 
+def stated_partial(request, full):
+    """A money amount the merchant wrote that is less than the order total, e.g. "$15" or "10 bucks"; None if none."""
+    for m in re.finditer(r"\$\s?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:bucks|dollars|usd)\b", request.lower()):
+        v = float(m.group(1) or m.group(2))
+        if 0 < v < full - 0.005:
+            return "%g" % v
+    return None
+
+
 # Each rule has a name so it can be switched off (RULES_OFF=state,amount) or an extra one tried (RULES_EXTRA=...).
 RULES_OFF = set(filter(None, os.environ.get("RULES_OFF", "").split(",")))
 RULES_EXTRA = set(filter(None, os.environ.get("RULES_EXTRA", "").split(",")))
@@ -343,6 +352,8 @@ def guard(call, acct, request):
             return why
         if o is None:
             return None
+        if ON("stated_amount") and a.get("amount_value") in (None, "") and stated_partial(request, o["amount"]):
+            return "the merchant asked for a partial refund of %s; put that amount in amount_value" % stated_partial(request, o["amount"])
         if a.get("amount_value") not in (None, "") and ON("amount"):
             amt = _num(a["amount_value"])
             if amt is None or amt <= 0 or amt > o["amount"] + 0.005:

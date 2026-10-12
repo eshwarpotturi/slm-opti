@@ -210,18 +210,18 @@ D.examples.forEach((e) => {
 // rules
 (function () {
   const pill = (v, unit) => { if (v == null) return el('span', 'small', ''); const c = v > 0 ? 'up' : v < 0 ? 'down' : 'flat'; return el('span', 'pill ' + c, (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v) + unit); };
-  const head = (t) => { const tr = el('tr'); ['Rule', 'What it does', D.kind === 'payments' ? 'Correct answers' : 'Change', D.kind === 'payments' ? 'Wrong actions avoided' : ''].forEach((c, i) => { if (c !== '' || i < 3) tr.appendChild(el('th', i > 1 ? 'n' : '', c)); }); t.appendChild(tr); };
+  const head = (t) => { const tr = el('tr'); ['Rule', 'What it does', D.kind === 'payments' ? 'Extra correct (of 150)' : 'Change', D.kind === 'payments' ? 'Wrong actions avoided' : ''].forEach((c, i) => { if (c !== '' || i < 3) tr.appendChild(el('th', i > 1 ? 'n' : '', c)); }); t.appendChild(tr); };
   const row = (t, r) => {
     const tr = el('tr'); tr.appendChild(el('td', '', r.name)); tr.appendChild(el('td', 'desc', r.desc));
-    const a = el('td', 'n'); a.appendChild(pill(r.pts, ' pts')); tr.appendChild(a);
+    const a = el('td', 'n'); a.appendChild(pill(r.pts, D.kind === 'payments' ? '' : ' pts')); tr.appendChild(a);
     if (D.kind === 'payments') { const b = el('td', 'n'); b.appendChild(pill(r.wrong, '')); tr.appendChild(b); }
     t.appendChild(tr);
   };
-  const kept = D.rules.filter((r) => r.kind === 'kept').sort((a, b) => b.pts - a.pts || b.wrong - a.wrong);
+  const kept = D.rules.filter((r) => r.kind === 'kept').sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0) || b.pts - a.pts || b.wrong - a.wrong);
   const tried = D.rules.filter((r) => r.kind === 'tried').sort((a, b) => a.pts - b.pts);
   const topT = $('#rules-top'), more = $('#rules-more'); head(topT); head(more);
   let top, rest;
-  if (D.kind === 'payments') { top = kept.slice(0, 3).concat(tried.slice(0, 2)); rest = kept.slice(3).concat(tried.slice(2)); }
+  if (D.kind === 'payments') { top = kept.slice(0, 4).concat(tried.slice(0, 2)); rest = kept.slice(4).concat(tried.slice(2)); }
   else { top = tried.slice(0, 3); rest = tried.slice(3); }
   top.forEach((r) => row(topT, r)); rest.forEach((r) => row(more, r));
   $('#rules-more-sum').textContent = `All ${D.rules.length} rules`;
