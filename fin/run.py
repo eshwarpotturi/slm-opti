@@ -135,6 +135,12 @@ def unsupported(formula, doc, question):
 ALONE = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
          "Work it out step by step, then finish with one line in exactly this form:\nANSWER: <a single number, or yes or no>\n"
          "Do not put units or words on that line. Give a percentage as the percent number, for example 7.52 for 7.52%. Keep at least two decimal places.")
+REFS = ("You are a financial analyst. Read the extract from a company's annual report and answer the question.\n"
+        "Every table cell has a reference such as R2C3 (row 2, column 3). First write which cells you need, one per line, "
+        "as: R2C3 = <row name>, <column name>. Check that each one is the row and the year the question asks about.\n"
+        "Then finish with one line:\nFORMULA: <arithmetic using the cell references, for example (R1C1 - R1C2) / R1C2>\n"
+        "Use a plain number only for a figure that appears in the text rather than the table. "
+        "If the question asks yes or no, finish with ANSWER: yes or ANSWER: no instead.")
 EXTRA = ("\nAfter the ANSWER line add one more line with the arithmetic behind it, numbers and signs only, "
         "using figures copied exactly from the extract:\nFORMULA: <for example (5829 - 5735) / 5735>\n"
         "A calculator will redo that arithmetic, so the formula must be complete. For a yes or no question leave the FORMULA line out.")
@@ -153,7 +159,36 @@ def facts(t):
 LAYERS = ""
 
 
+def labelled(t):
+    """Layer 7: every table cell carries a reference such as R2C3, written as the row name, the column name and the value."""
+    head = [c.strip() for c in t["table"][0]]
+    out = []
+    for i, r in enumerate(t["table"][1:], start=1):
+        cells = ["[R%dC%d] %s = %s" % (i, j, head[j] if j < len(head) and head[j] else "column %d" % j, c.strip())
+                 for j, c in enumerate(r) if j and c.strip()]
+        out.append("%s: %s" % (r[0].strip(), "; ".join(cells)))
+    return "\n".join(["\n".join(t["before"]), "", "TABLE, one row per line, each cell with its reference:", "\n".join(out), "", "\n".join(t["after"])]).strip()
+
+
+def resolve(t, formula):
+    """Replaces cell references (R2C3) in a formula with the numbers in those cells."""
+    def cell(m):
+        i, j = int(m.group(1)), int(m.group(2))
+        try:
+            v = t["table"][i][j]
+        except IndexError:
+            raise ValueError("no cell R%dC%d" % (i, j))
+        s2 = v.replace("$", "").replace(",", "").replace("%", "").strip()
+        neg = s2.startswith("(") and s2.endswith(")")
+        s2 = s2.strip("()").split()[0] if s2.strip("()").split() else ""
+        float(s2)
+        return ("(-%s)" % s2) if neg else s2
+    return re.sub(r"\[?R(\d+)C(\d+)\]?", cell, formula)
+
+
 def ask(t):
+    if "7" in LAYERS:
+        return "EXTRACT:\n%s\n\nQUESTION: %s" % (labelled(t), t["question"])
     if "5" in LAYERS:
         return "QUESTION: %s\n\nEXTRACT:\n%s\n\nQUESTION (again): %s" % (t["question"], facts(t), t["question"])
     return "EXTRACT:\n%s\n\nQUESTION: %s" % (render(t), t["question"])
@@ -237,7 +272,8 @@ def attempt(model, t, layers, temperature, tuned):
     """One pass: returns (answer, formula, cost, notes). The calculator's result replaces the model's own arithmetic."""
     doc, cost, notes = render(t), 0.0, []
     use_calc = tuned or "1" in layers
-    head = TUNED if tuned else ALONE + (EXTRA if use_calc else "") + ("\n\n" + example_text(t["question"], use_calc) if "3" in layers else "")
+    use_calc = use_calc or "7" in layers
+    head = TUNED if tuned else (REFS if "7" in layers else ALONE + (EXTRA if use_calc else "")) + ("\n\n" + example_text(t["question"], use_calc) if "3" in layers else "")
     msgs = [{"role": "user", "content": head + "\n\n" + ask(t)}]
     answer = formula = None
     for turn in range(2 if (("2" in layers or "6" in layers) and use_calc) else 1):
@@ -258,6 +294,8 @@ def attempt(model, t, layers, temperature, tuned):
             problem = "Your reply had no FORMULA line. Give the FORMULA line for your answer"
         else:
             try:
+                if "7" in layers:
+                    formula = resolve(t, formula)
                 value = calc(formula)
                 if isinstance(value, str):
                     raise ValueError("comparison")
