@@ -302,6 +302,32 @@ def finqa(out_dir):
         pc = lambda f: round(100.0 * sum(f(i) for i in ii) / max(1, len(ii)))
         cat_rows.append({"label": lab, "n": len(ii), "base": pc(lambda i: alone[i]["right"]), "tuned": pc(lambda i: fig[i]["first_right"]),
                          "both": pc(lambda i: big[i]["right"] if i in up else fig[i]["first_right"])})
+    def band(k):
+        ii = [i for i in ids if fig[i]["agree"] == k] if k else []
+        return ii
+    cal = []
+    for k, lab, act in [(3, "All three agree", "keep the small model's answer"), (2, "Two of three agree", "ask the large model"), (1, "All three differ", "ask the large model")]:
+        ii = [i for i in ids if fig[i]["agree"] == k] if k > 1 else [i for i in ids if fig[i]["agree"] <= 1]
+        r = sum(fig[i]["first_right"] for i in ii)
+        cal.append([lab, str(len(ii)), "%d (%d%%)" % (r, round(100.0 * r / max(1, len(ii)))), act])
+    ft1_min = round(json.load(open(os.path.join(F, "results", "finetune_training_log.json")))["minutes"])
+    dist_log = os.path.join(F, "results", "finetune_log_distilled.json")
+    dist_min = ("%d min" % round(json.load(open(dist_log))["minutes"])) if os.path.exists(dist_log) else "to be added"
+    ff_ids = list(ff)
+    ff_gain = round(100.0 * sum(ff[i]["first_right"] for i in ff_ids) / len(ff_ids)) - round(100.0 * sum(alone[i]["right"] for i in ff_ids) / len(ff_ids))
+    p_ft1 = round(100.0 * sum(ft1[i]["right"] for i in ids) / N)
+    ft_tables = [
+        {"title": "Three fine-tunes, side by side", "note": "Same small model each time, trained once through its examples on a free cloud GPU. Gains are on the same %d questions, except * which was measured on the first %d questions." % (N, len(ff_ids)),
+         "cols": ["", "1. On the answers", "2. Figures first", "3. Distilled"],
+         "rows": [["What it learned to write", "the formula", "the figures, then the formula", "the large model's figures, working and formula"],
+                  ["Training examples", "1,026", "2,500", "2,348"],
+                  ["Where the examples came from", "benchmark answers", "benchmark answers", "large model, kept only if right"],
+                  ["Cost of the examples", "₹0", "₹0", "₹505"],
+                  ["Training time", "%d min" % ft1_min, "not recorded", dist_min],
+                  ["Gain over the model alone", "+%d pts" % (p_ft1 - p_alone), "+%d pts*" % ff_gain, "+%d pts" % (p_fig - p_alone)]]},
+        {"title": "When the small model disagrees with itself, it is usually wrong", "note": "The distilled model answers each question three times. How often its first answer was right, by how much the three agreed.",
+         "cols": ["Three tries", "Questions", "Small model right", "So the system will"], "rows": cal},
+    ]
     data = {
         "kind": "finqa", "n": N,
         "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "tuned", "name": "Distilled small model"}, {"key": "final", "name": "Final: + large model when unsure"}],
@@ -313,7 +339,7 @@ def finqa(out_dir):
                     "glance": "final: distilled small model, large model only when unsure"},
                    {"name": "Large only", "pct": p_big, "ref": True, "sub": ["for reference"]}],
         "rules": rule_rows, "base_dev": base_dev, "examples": ex, "items": items,
-        "ft": {"loss": None, "cats": cat_rows,
+        "ft": {"loss": None, "cats": cat_rows, "tables": ft_tables,
                "tiles": [["₹0", "GPU cost (free cloud GPU)"], ["2,348", "worked answers from the large model, for ₹505"],
                          ["%d of %d" % (len(sure_ids), N), "answered by the small model alone (all three tries agreed)"],
                          ["₹%.2f" % (big_cost * 100), "large-model cost per question it is asked"]]},

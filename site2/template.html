@@ -99,6 +99,7 @@ footer{padding:26px 0 60px;font-size:.84rem;color:var(--mute)}
     <div class="card"><h3>Training loss</h3><p class="small">How far the model's answers were from the correct ones during training, every 5 steps. Lower is better. One pass through the examples.</p><div id="loss"></div></div>
     <div class="card" style="overflow-x:auto"><h3>Where it helped and where it did not</h3><p class="small">Share correct by type, on the unseen test.</p><table id="ft-cats"></table></div>
   </div>
+  <div id="ft-tables"></div>
   <div class="insight" id="ft-insight"></div>
 </div></section>
 
@@ -255,6 +256,13 @@ D.examples.forEach((e) => {
     t.appendChild(tr);
   });
   $('#ft-insight').textContent = COPY.ft_insight;
+  (ft.tables || []).forEach((tb) => {
+    const c = el('div', 'card'); c.style.marginTop = '16px'; c.style.overflowX = 'auto';
+    c.appendChild(el('h3', '', tb.title)); if (tb.note) c.appendChild(el('p', 'small', tb.note));
+    const t = el('table'); const h = el('tr'); tb.cols.forEach((x, i) => h.appendChild(el('th', i ? 'n' : '', x))); t.appendChild(h);
+    tb.rows.forEach((r) => { const tr = el('tr'); r.forEach((x, i) => { const td = el('td', i ? 'n' : '', x); if (tb.hi && i === tb.hi[0] && r === tb.rows[tb.hi[1]]) td.style.fontWeight = 700; tr.appendChild(td); }); t.appendChild(tr); });
+    c.appendChild(t); $('#ft-tables').appendChild(c);
+  });
 })();
 
 // tried and dropped
