@@ -216,7 +216,8 @@ def finqa(out_dir):
     T = {t["id"]: t for t in json.load(open(os.path.join(F, "data", "test.json")))}
     ids = list(T)
     alone = jl(os.path.join(F, "results", "google.gemma-3-4b-it__L0-t.jsonl"))
-    fig = jl(os.path.join(F, "results", "gemma-3-4b-figures__L24-fig.jsonl"))
+    fig = jl(os.path.join(F, "results", "gemma-3-4b-distilled__L24-dist.jsonl"))
+    ff = jl(os.path.join(F, "results", "gemma-3-4b-figures__L24-fig.jsonl"))
     big = jl(os.path.join(F, "results", "us.anthropic.claude-haiku-4-5-20251001-v1-0__L0-t.jsonl"))
     ids = [i for i in ids if i in fig]          # the questions the fine-tuned model has answered so far
     N = len(ids)
@@ -248,7 +249,7 @@ def finqa(out_dir):
     for i in ids:
         t, a, f, b = T[i], alone[i], fig[i], big[i]
         tries = ", ".join("%s (%d of 3)" % (vote_num(k, t["answer"]), n) for k, n in f["votes"]) or "no answer"
-        small_txt = ["Figures picked, then formula: %s" % (f.get("first_formula") or f["first"]), "Calculator: %s" % num(f["first"], t["answer"])]
+        small_txt = [l.strip()[:160] for l in (f.get("raw") or "").splitlines() if l.strip()][:8] + ["Calculator: %s" % num(f["first"], t["answer"])]
         if sure(i):
             final = {"text": ["Three tries all gave %s, so the small model's answer stands" % num(f["first"], t["answer"])], "ok": f["first_right"], "bad": False}
         else:
@@ -266,7 +267,7 @@ def finqa(out_dir):
         tb = T[x["id"]]["table"]
         return (3 <= len(tb) <= 6 and len(tb[0]) <= 4 and len(x["q"]) < 120) if strict else len(tb) <= 8
     ex = []
-    tests = [(lambda i: not alone[i]["right"] and fig[i]["first_right"] and sure(i), "Fine-tuning fixed it: it picked the right figures, and all three tries agreed"),
+    tests = [(lambda i: not alone[i]["right"] and fig[i]["first_right"] and sure(i), "Distillation fixed it: it listed the right figures, and all three tries agreed"),
              (lambda i: not fig[i]["first_right"] and not sure(i) and big[i]["right"], "The small model was unsure, so the large model answered, correctly"),
              (lambda i: sure(i) and not fig[i]["first_right"], "Where it still fails: all three tries agreed on a wrong answer")]
     for test, lab in tests:
@@ -292,6 +293,8 @@ def finqa(out_dir):
     sure_ids = [i for i in ids if sure(i)]
     sure_right = sum(fig[i]["first_right"] for i in sure_ids)
     big_cost = sum(big[i]["cost"] for i in up) / max(1, len(up))       # dollars per escalated question
+    ovl = [i for i in ids if i in ff]
+    ff_same = (len(ovl), sum(ff[i]["first_right"] for i in ovl), sum(fig[i]["first_right"] for i in ovl))
     cat_rows = []
     for lab in ["One step", "Two steps", "Three or more steps"]:
         ii = [x["id"] for x in items if x["cat"] == lab]
@@ -300,16 +303,16 @@ def finqa(out_dir):
                          "both": pc(lambda i: big[i]["right"] if i in up else fig[i]["first_right"])})
     data = {
         "kind": "finqa", "n": N,
-        "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "tuned", "name": "Fine-tuned"}, {"key": "final", "name": "Final: + large model when unsure"}],
+        "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "tuned", "name": "Distilled small model"}, {"key": "final", "name": "Final: + large model when unsure"}],
         "ladder": [{"name": "Alone", "pct": p_alone, "sub": ["small model"]},
                    {"name": "Rules only", "pct": None},
-                   {"name": "Fine-tuned", "pct": p_fig, "sub": ["figures first"]},
+                   {"name": "Distilled", "pct": p_fig, "sub": ["learned from", "large model"]},
                    {"name": "Final", "pct": p_final, "final": True, "sub": ["large model on", "%d of %d" % (len(up), N)],
-                    "glance": "final: fine-tuned small model, large model only when unsure"},
+                    "glance": "final: distilled small model, large model only when unsure"},
                    {"name": "Large only", "pct": p_big, "ref": True, "sub": ["for reference"]}],
         "rules": rule_rows, "base_dev": base_dev, "examples": ex, "items": items,
         "ft": {"loss": None, "cats": cat_rows,
-               "tiles": [["₹0", "GPU cost (free cloud GPU)"], ["2,500", "solved training questions"],
+               "tiles": [["₹0", "GPU cost (free cloud GPU)"], ["2,348", "worked answers from the large model, for ₹505"],
                          ["%d of %d" % (len(sure_ids), N), "answered by the small model alone (all three tries agreed)"],
                          ["₹%.2f" % (big_cost * 100), "large-model cost per question it is asked"]]},
     }
@@ -321,27 +324,27 @@ def finqa(out_dir):
         "ex_h": "The task, in three questions",
         "ex_p": "Each card shows the table from the report, the question and the benchmark's answer. Press Play to replay what each setup answered.",
         "ladder_h": "What moved the score",
-        "ladder_note": "Each bar is a separate setup on the same %d unseen questions (the first %d of 297; the full run is in progress). Share answered correctly, to within 1%%." % (N, N),
+        "ladder_note": "Each bar is a separate setup on the same %d unseen questions: the %d shortest of the benchmark's 297, so every score is a little higher than on the full set. Share answered correctly, to within 1%%." % (N, N),
         "steps": [
             ["Small model alone: %d%%" % p_alone, "Gemma 3 4B, an open model small enough to run on one ordinary GPU, reads the page, works step by step and gives a number."],
             ["Rules only: no gain", "Six code-only fixes were tried on 100 practice questions: a calculator, a check that figures are printed in the report, worked examples, voting and others. None beat the model alone, so none is used."],
-            ["Fine-tuned: %d%%" % p_fig, "The same model trained on 2,500 solved questions from the benchmark's training set to first list the figures it needs, with their year, and then write the formula. Code does the arithmetic."],
-            ["Final: %d%%" % p_final, "The fine-tuned model answers each question three times. If all three agree (%d of %d questions) its answer stands; it was right on %d of those. If they disagree, the question goes to a large model (Claude Haiku 4.5). The large model sees only %d%% of questions." % (len(sure_ids), N, sure_right, round(100.0 * len(up) / N))],
+            ["Distilled: %d%%" % p_fig, "A large model (Claude Haiku 4.5) worked through 3,000 questions from the benchmark's training set, writing the figures it needs, a short explanation and the formula. The 2,348 it got right became the lessons; the same small model was trained on them once. Code does the arithmetic. An earlier fine-tune that only learned to list figures first scored the same on the %d questions both answered (%d vs %d right)." % (ff_same[0], ff_same[2], ff_same[1])],
+            ["Final: %d%%" % p_final, "The distilled model answers each question three times. If all three agree (%d of %d questions) its answer stands; it was right on %d of those. If they disagree, the question goes to a large model (Claude Haiku 4.5). The large model sees only %d%% of questions." % (len(sure_ids), N, sure_right, round(100.0 * len(up) / N))],
             ["Large model alone: %d%%" % p_big, "For reference: the large model on every question. The final setup comes within %d point%s of it while the small model handles %d%% of questions itself." % (p_big - p_final, "" if p_big - p_final == 1 else "s", round(100.0 * len(sure_ids) / N))]],
         "rules_h": "Rules: none of them helped here",
         "rules_p": "Each was tried on 100 practice questions from the benchmark's separate development set. The number is its change against the model alone (%d%%). The mistakes are mostly the wrong row, the wrong year or a misread question, which a calculator cannot repair. A few points either way is within chance at this size." % base_dev,
-        "ft_h": "Fine-tuning: pick the figures first, then ask for help when unsure",
-        "ft_insight": ("The first fine-tune taught the model to write a formula straight away; most of its mistakes were the wrong row or year. Training it to list the figures first fixed some of those. The three-tries check is what makes it usable: when the small model disagrees with itself, it is usually wrong, so those questions go to the large model. Questions needing three or more steps are still out of reach: %d of %d right in the final setup." % (round(cat_rows[2]["both"] * cat_rows[2]["n"] / 100), cat_rows[2]["n"])),
-        "ft_cols": ["Steps in the answer", "Questions", "Alone", "Fine-tuned", "Final"],
+        "ft_h": "Distillation: learn from the large model's worked answers, then ask for help when unsure",
+        "ft_insight": ("Learning from the large model's worked answers lifted the small model by %d points on its own. When its three tries agree, it is right %d%% of the time, so those answers are kept; when they disagree, the question goes to the large model. Questions needing three or more steps are still hard: %d of %d right in the final setup." % (p_fig - p_alone, round(100.0 * sure_right / max(1, len(sure_ids))), round(cat_rows[2]["both"] * cat_rows[2]["n"] / 100), cat_rows[2]["n"])),
+        "ft_cols": ["Steps in the answer", "Questions", "Alone", "Distilled", "Final"],
         "nohelp_h": "Tried and dropped",
         "nohelp": [
             ["A formula with no working", "Asking for the formula only, without reasoning first, cut the score from %d%% to %d%% on the practice questions. The model needs to reason before it commits to a formula." % (base_dev, dev("google.gemma-3-4b-it__L1-d2"))],
-            ["Fine-tuning on the formula alone", "The first fine-tune learned to write just the formula. It gained a few points on short questions but fell on questions needing three or more steps, so it was replaced by the figures-first version."],
+            ["Fine-tuning on the formula alone", "The first fine-tune learned to write just the formula. It gained a few points on short questions but fell on questions needing three or more steps, so it was replaced."],
             ["Showing the right page only", "Not tried here: the benchmark already gives the model the right page. In a full annual report, finding the page is its own problem."]],
         "all_h": "Every question",
         "all_p": "Click a question to replay it, or run all %d at once." % N,
         "col_q": "Question", "col_want": "Correct answer",
-        "limits": "Scores are on the first %d of 297 test questions; the rest are still running, and a few points either way is within chance at this size. The benchmark gives the model the right page; finding that page in a full report is not tested. The benchmark's own answers contain some errors, which caps every score. A share may be written as 0.07 or 7%%. Fine-tuned answers were recorded on a free cloud GPU with the model compressed to 4 bits." % N,
+        "limits": "Scores are on the %d shortest of 297 test questions; the longer ones are still to be run, and a few points either way is within chance at this size. The benchmark gives the model the right page; finding that page in a full report is not tested. The benchmark's own answers contain some errors, which caps every score. A share may be written as 0.07 or 7%%. Fine-tuned answers were recorded on a free cloud GPU with the model compressed to 4 bits." % N,
     }
     write(out_dir, copy, data)
 
