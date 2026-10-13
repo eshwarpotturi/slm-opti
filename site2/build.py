@@ -353,7 +353,7 @@ def finqa(out_dir):
         "ex_h": "The task, in three questions",
         "ex_p": "Each card shows the table from the report, the question and the benchmark's answer. Press Play to replay what each setup answered.",
         "ladder_h": "What moved the score",
-        "ladder_note": "Each bar is a separate setup on the same %d unseen questions: the %d shortest of the benchmark's 297, so every score is a little higher than on the full set. Share answered correctly, to within 1%%." % (N, N),
+        "ladder_note": "Each bar is a separate setup on the same %d unseen questions, all from the shorter half of the benchmark's 297, so every score is a little higher than on the full set. Share answered correctly, to within 1%%." % N,
         "steps": [
             ["Small model alone: %d%%" % p_alone, "Gemma 3 4B, an open model small enough to run on one ordinary GPU, reads the page, works step by step and gives a number."],
             ["Rules only: no gain", "Six code-only fixes were tried on 100 practice questions: a calculator, a check that figures are printed in the report, worked examples, voting and others. None beat the model alone, so none is used."],
@@ -374,7 +374,7 @@ def finqa(out_dir):
         "all_h": "Every question",
         "all_p": "Click a question to replay it, or run all %d at once." % N,
         "col_q": "Question", "col_want": "Correct answer",
-        "limits": "Scores are on the %d shortest of 297 test questions; the longer ones are still to be run, and a few points either way is within chance at this size. The benchmark gives the model the right page; finding that page in a full report is not tested. The benchmark's own answers contain some errors, which caps every score. A share may be written as 0.07 or 7%%. Fine-tuned answers were recorded on a free cloud GPU with the model compressed to 4 bits." % N,
+        "limits": "Scores are on %d of the shorter test questions out of 297; the longer ones are still to be run, and a few points either way is within chance at this size. The benchmark gives the model the right page; finding that page in a full report is not tested. The benchmark's own answers contain some errors, which caps every score. A share may be written as 0.07 or 7%%. Fine-tuned answers were recorded on a free cloud GPU with the model compressed to 4 bits." % N,
     }
     write(out_dir, copy, data)
 
