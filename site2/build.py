@@ -218,6 +218,7 @@ def finqa(out_dir):
     alone = jl(os.path.join(F, "results", "google.gemma-3-4b-it__L0-t.jsonl"))
     fig = jl(os.path.join(F, "results", "gemma-3-4b-distilled__L24-dist.jsonl"))
     ff = jl(os.path.join(F, "results", "gemma-3-4b-figures__L24-fig.jsonl"))
+    ft1 = jl(os.path.join(F, "results", "gemma-3-4b-tuned__L2-t.jsonl"))
     big = jl(os.path.join(F, "results", "us.anthropic.claude-haiku-4-5-20251001-v1-0__L0-t.jsonl"))
     ids = [i for i in ids if i in fig]          # the questions the fine-tuned model has answered so far
     N = len(ids)
@@ -306,6 +307,7 @@ def finqa(out_dir):
         "setups": [{"key": "alone", "name": "Small model alone"}, {"key": "tuned", "name": "Distilled small model"}, {"key": "final", "name": "Final: + large model when unsure"}],
         "ladder": [{"name": "Alone", "pct": p_alone, "sub": ["small model"]},
                    {"name": "Rules only", "pct": None},
+                   {"name": "Fine-tuned", "pct": P(ft1, "right"), "sub": ["on the", "answers"]},
                    {"name": "Distilled", "pct": p_fig, "sub": ["learned from", "large model"]},
                    {"name": "Final", "pct": p_final, "final": True, "sub": ["large model on", "%d of %d" % (len(up), N)],
                     "glance": "final: distilled small model, large model only when unsure"},
@@ -328,7 +330,8 @@ def finqa(out_dir):
         "steps": [
             ["Small model alone: %d%%" % p_alone, "Gemma 3 4B, an open model small enough to run on one ordinary GPU, reads the page, works step by step and gives a number."],
             ["Rules only: no gain", "Six code-only fixes were tried on 100 practice questions: a calculator, a check that figures are printed in the report, worked examples, voting and others. None beat the model alone, so none is used."],
-            ["Distilled: %d%%" % p_fig, "A large model (Claude Haiku 4.5) worked through 3,000 questions from the benchmark's training set, writing the figures it needs, a short explanation and the formula. The 2,348 it got right became the lessons; the same small model was trained on them once. Code does the arithmetic. An earlier fine-tune that only learned to list figures first scored the same on the %d questions both answered (%d vs %d right)." % (ff_same[0], ff_same[2], ff_same[1])],
+            ["Fine-tuned on the answers: %d%%" % P(ft1, "right"), "First fine-tune: the same small model trained on 1,026 solved questions from the benchmark's training set to write the formula straight away. A small gain, but it skips its reasoning and fails on longer questions."],
+            ["Distilled: %d%%" % p_fig, "Second fine-tune, this time on the reasoning, not just the answers. A large model (Claude Haiku 4.5) worked through 3,000 questions from the benchmark's training set, writing the figures it needs, a short explanation and the formula. The 2,348 it got right became the lessons; the same small model was trained on them once. Code does the arithmetic. A third fine-tune that only learned to list figures first scored the same on the %d questions both answered (%d vs %d right)." % (ff_same[0], ff_same[2], ff_same[1])],
             ["Final: %d%%" % p_final, "The distilled model answers each question three times. If all three agree (%d of %d questions) its answer stands; it was right on %d of those. If they disagree, the question goes to a large model (Claude Haiku 4.5). The large model sees only %d%% of questions." % (len(sure_ids), N, sure_right, round(100.0 * len(up) / N))],
             ["Large model alone: %d%%" % p_big, "For reference: the large model on every question. The final setup comes within %d point%s of it while the small model handles %d%% of questions itself." % (p_big - p_final, "" if p_big - p_final == 1 else "s", round(100.0 * len(sure_ids) / N))]],
         "rules_h": "Rules: none of them helped here",
